@@ -9,6 +9,7 @@
 #define REGISTER_NUM				16			// number of registers as defined in the project
 
 #include <stdio.h>
+#include <stdlib.h>
 
 
 //////////////////////////////// Structs definitions for simplicity  /////////////////////////////////////
@@ -41,7 +42,8 @@ typedef struct output_files {
 
 typedef struct monitor_files {
 	FILE* display7seg;
-	FILE* monitor;
+	FILE* monitor_txt;
+	FILE* monitor_yuv;
 } Monitor_files;
 
 
@@ -64,11 +66,12 @@ int main(int argc, char* argv[]) {
 	unsigned int CLK = 0;
 	unsigned int* clk = &CLK;
 
+
 	// Initialize the input and output files to NULL to avoid garbage values
 
 	Input_files input_files = { NULL, NULL, NULL, NULL };
 	Output_files output_files = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-	Monitor_files monitor_files = { NULL, NULL };
+	Monitor_files monitor_files = { NULL, NULL, NULL };
 
 	// Allocate memory for the memory array
 
@@ -82,10 +85,10 @@ int main(int argc, char* argv[]) {
 	Instruction instructions[MAX_LINE_DEPTH];
 
 	// Open the input files and store them in the input_files struct
-	input_files.imemin = fopen("imemin.txt", "r");
-	input_files.dmemin = fopen("dmemin.txt", "r");
-	input_files.diskin = fopen("diskin.txt", "r");
-	input_files.irq2in = fopen("irq2in.txt", "r");
+	input_files.imemin = fopen(argv[1], "r");
+	input_files.dmemin = fopen(argv[2], "r");
+	input_files.diskin = fopen(argv[3], "r");
+	input_files.irq2in = fopen(argv[4], "r");
 
 	// check all files have been opened successfully
 	if (check_input_files(&input_files) == 1) {
@@ -93,13 +96,13 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Open the output files and store them in the output_files struct
-	output_files.dmemout = fopen("dmemout.txt", "w");
-	output_files.regout = fopen("regout.txt", "w");
-	output_files.trace = fopen("trace.txt", "w");
-	output_files.hwregtrace = fopen("hwregtrace.txt", "w");
-	output_files.cycles = fopen("cycles.txt", "w");
-	output_files.leds = fopen("leds.txt", "w");
-	output_files.diskout = fopen("diskout.txt", "w");
+	output_files.dmemout = fopen(argv[5], "w");
+	output_files.regout = fopen(argv[6], "w");
+	output_files.trace = fopen(argv[7], "w");
+	output_files.hwregtrace = fopen(argv[8], "w");
+	output_files.cycles = fopen(argv[9], "w");
+	output_files.leds = fopen(argv[10], "w");
+	output_files.diskout = fopen(argv[11], "w");
 
 	// check all files have been opened successfully
 	if (check_output_files(&output_files) == 1) {
@@ -108,14 +111,39 @@ int main(int argc, char* argv[]) {
 
 
 	// Open the monitor files and store them in the monitor_files struct
-	monitor_files.display7seg = fopen("display7seg.txt", "w");
-	monitor_files.monitor = fopen("monitor.txt", "w");
+	monitor_files.display7seg = fopen(argv[12], "w");
+	monitor_files.monitor_txt = fopen(argv[13], "w");
+	monitor_files.monitor_yuv = fopen(argv[14], "w");
 
-	// check all files have been opened successfully
+	// Check all files have been opened successfully
 	if (check_monitor_files(&monitor_files) == 1) {
 		return 1;
 	}
 
+
+	// main code goes here- read the input files and store the instructions in the instructions array
+	// then execute the instructions and write the output to the output files
+	
+
+
+	// Free allocations and close all files
+
+	free(memory);
+	fclose(input_files.imemin);
+	fclose(input_files.dmemin);
+	fclose(input_files.diskin);
+	fclose(input_files.irq2in);
+	fclose(output_files.dmemout);
+	fclose(output_files.regout);
+	fclose(output_files.trace);
+	fclose(output_files.hwregtrace);
+	fclose(output_files.cycles);
+	fclose(output_files.leds);
+	fclose(output_files.diskout);
+	fclose(monitor_files.display7seg);
+	fclose(monitor_files.monitor_txt);
+	fclose(monitor_files.monitor_yuv);
+	printf("SIMULATOR FINISHED\n");
 	return 0;
 }
 
@@ -154,7 +182,7 @@ int check_output_files(Output_files* files) {
 }
 
 int check_monitor_files(Monitor_files* files) {
-	if (files->display7seg == NULL || files->monitor == NULL) {
+	if (files->display7seg == NULL || files->monitor_txt == NULL|| files->monitor_yuv == NULL) {
 		printf("Error: One or more monitor files failed to open.\n");
 		return 1;
 	}
