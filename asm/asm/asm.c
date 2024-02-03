@@ -1,5 +1,17 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <string.h>
+
+#define MAX_LINE_LENGTH 500
+#define MAX_LABEL_NAME 50
+#define NUM_OF_REGS 16
+
+typedef struct labels {
+	char name[MAX_LABEL_NAME];
+	int location;
+} Label;
+
 
 int get_opcode_num(const char* opcode) {
     if (strcmp(opcode, "add") == 0)     return 0x00 ;
@@ -60,10 +72,16 @@ unsigned long long merge_opcode_and_regs(int opcode, int rd, int rs, int rt, int
 	return result;
 }
 
+void first_pass() {
+	// go through each line and find labels
+	
+}
+
+
 int main() {
 	unsigned long long hex1=21, hex2=0xAf, hex3=0x521A, hex4=0x0F;
 	
-	printf("hex1: % 012llX\n hex2 : % 012llX\n, hex3: % 012llX\n, hex4: % 012llX\n", hex1, hex2, hex3, hex4);  //writes 12 hex symbols of a number
+	printf("hex1: % 012llX\nhex2 : % 012llX\nhex3: % 012llX\nhex4: % 012llX\n", hex1, hex2, hex3, hex4);  //writes 12 hex symbols of a number
 
 	return 0;
 }
