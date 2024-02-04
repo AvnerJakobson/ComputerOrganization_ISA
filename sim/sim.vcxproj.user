@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>"C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\fibexample\imemin.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\fibexample\dmemin.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\fibexample\diskin.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\fibexample\irq2in.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\dmemout.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\regout.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\trace.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\hwregtrace.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\cycles.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\leds.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\display7seg.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\diskout.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\monitor.txt" "C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\test\monitor.yuv"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

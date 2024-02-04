@@ -1,0 +1,3 @@
+﻿  sim.c
+C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\sim\sim.c(85,14): warning C4101: 'instructions': unreferenced local variable
+  sim.vcxproj -> C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\sim\x64\Debug\sim.exe
