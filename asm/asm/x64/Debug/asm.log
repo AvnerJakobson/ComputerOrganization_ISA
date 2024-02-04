@@ -1,2 +1,4 @@
 ﻿  asm.c
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(126,4): warning C4013: 'exit' undefined; assuming extern returning int
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(120,8): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[51]'
   asm.vcxproj -> C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\x64\Debug\asm.exe

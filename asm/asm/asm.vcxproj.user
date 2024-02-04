@@ -3,4 +3,8 @@
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>fib.asm 123 abc</LocalDebuggerCommandArguments>
+  </PropertyGroup>
 </Project>
