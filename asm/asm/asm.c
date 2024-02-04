@@ -15,6 +15,12 @@ typedef struct label
 	int label_addr;
 } label;
 
+typedef struct instruction
+{
+	char opcode[5];
+	char rd[6], rs[6], rt[6], rm[6];
+	int imm_a[MAX_LABEL_NAME + 1], imm_b[MAX_LABEL_NAME + 1];
+} instruction;
 ////////////FUNCTIONS////////////
 
 
@@ -82,9 +88,9 @@ int get_opcode_num(const char* opcode) {
 
 //hardcoded map of register to its hex value
 int get_reg_num(const char* reg) {
-	if (strcmp(reg, "zero") == 0)   return 0x0 ;
-	if (strcmp(reg, "imm1") == 0)   return 0x1 ;
-	if (strcmp(reg, "imm2") == 0)   return 0x2 ;
+	if (strcmp(reg, "$zero") == 0)   return 0x0 ;
+	if (strcmp(reg, "$imm1") == 0)   return 0x1 ;
+	if (strcmp(reg, "$imm2") == 0)   return 0x2 ;
 	if (strcmp(reg, "$v0") == 0)    return 0x3 ;
 	if (strcmp(reg, "$a0") == 0)    return 0x4 ;
 	if (strcmp(reg, "$a1") == 0)    return 0x5 ;
@@ -101,6 +107,35 @@ int get_reg_num(const char* reg) {
 
 	return -1;
 }
+
+//char* pre_process_line(char* line) {
+//	char* head = NULL;
+//	char last_s[MAX_LINE_LENGTH];
+//	char* last = &last_s;
+//	char* cl_line = line;
+//	int i = 0;
+//	if (is_word(line)) {
+//		return line;
+//	}
+//	
+//	while ((*line != '\n') && (*line != '#')) {
+//		if (!((*line == ' ') || (*line == '\t')))
+//			cl_line[i++] = *line;
+//		line++;
+//	}
+//	cl_line[i] = 0;
+//	if (*cl_line == 0) return NULL;
+//	else {
+//		strcpy(last, strchr(cl_line, '$'));
+//		head = cl_line;
+//		while (*(cl_line) != '$') cl_line++;
+//		*cl_line = ',';
+//		*(cl_line + 1) = 0;
+//		strcat(head, last);
+//		head[i + 1] = 0;
+//		return head;
+//	}
+//}
 
 //merges the opcode and registers into a single 48 bit number
 unsigned long long merge_opcode_and_regs(int opcode, int rd, int rs, int rt, int rm) {
@@ -140,7 +175,9 @@ int first_pass(FILE* fptr, label* labels) {
 	return counter;
 }
 
-
+void second_pass(FILE* fptr, instruction* instruction) {
+	return;
+}
 
 int main(int argc, char* argv[]) {
 	unsigned long long hex1=21, hex2=0xAf, hex3=0x521A, hex4=0x0F;
@@ -163,6 +200,8 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < num_of_labels; ++i) {
 		printf("Label Name: %s, Address: %03X\n", labels[i].label_name, labels[i].label_addr);
 	}
+	
+
 
 	fclose(asm_file);
 	return 0;
