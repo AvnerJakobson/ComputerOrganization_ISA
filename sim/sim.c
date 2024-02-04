@@ -1,12 +1,11 @@
 // Defines and includes
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_DEPRECATE 
-#define MAX_LINE_SIZE				500			// max size of each line as defined in the project
-#define MAX_LABEL_LENGTH			50			// maximum label length as defined in the project
-#define MAX_LINE_DEPTH			4096			// maximum line depth as defined in the project
-#define MAX_DISK_LINE_NUM			16384		// max lines in disk as defined in the project
-#define WORD_SIZE					32			// word size for each register as defined in the project
+#define MAX_LINE_SIZE				12			// max size of each line in memin.txt as defined in the project
+#define MAX_LINE_DEPTH				4096		// maximum line depth as defined in the project
+#define MAX_LINE_DEPTH_DISKIN 		16384		// maximum line depth of the disk as defined in the project
 #define REGISTER_NUM				16			// number of registers as defined in the project
+#define REGISTER_SIZE				32			// bits size for each register as defined in the project
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,11 +51,15 @@ typedef struct monitor_files {
 // trace
 void print_trace(FILE* trace, int* R, int pc, Instruction inst);
 
+void memin_decode(FILE* imemin, Instruction* instructions, int* memory);
+
 int check_input_files(Input_files* files);
 
 int check_output_files(Output_files* files);
 
 int check_monitor_files(Monitor_files* files);
+
+
 
 ////////////////////////////////////////////// Main Code //////////////////////////////////////////////
 int main(int argc, char* argv[]) {
@@ -124,7 +127,25 @@ int main(int argc, char* argv[]) {
 	// main code goes here- read the input files and store the instructions in the instructions array
 	// then execute the instructions and write the output to the output files
 	
+	// bring the next instruction from address PC
 
+	// decode the instruction according to the encoding
+	memin_decode(input_files.imemin, instructions, memory);
+	// excecute the instruction
+
+	// update PC to PC+1 (unless it was updated to another value for example by a jump command or an interrupt)
+
+	// end of execution of the instruction
+
+	// print the values of the contents of the data memory to the dmemout file
+	// print the values of the the values of the registers R3-R15 to the regout file
+	// print the trace of the instruction to the trace file
+	// print the values of the hardware registers to the hwregtrace file
+	// print the number of cycles to the cycles file
+	// print the values of the LEDs to the leds file
+	// print the values of the display7seg to the display7seg file
+	// print the values of the contents of the disk drive to diskout file
+	// print the values of the monitor to the monitor_txt and monitor_yuv files
 
 	// Free allocations and close all files
 
@@ -189,4 +210,19 @@ int check_monitor_files(Monitor_files* files) {
 	else {
 		return 0;
 	}
+}
+
+
+void memin_decode(FILE* imemin, Instruction* instructions, int* memory){
+	char line[MAX_LINE_SIZE];
+	int line_number = 0;
+	while (fgets(line, MAX_LINE_SIZE, imemin) != NULL && line_number < MAX_LINE_DEPTH) {
+		// decode the line and store the instruction in the instructions array
+		// also store the instruction in the memory array
+		// instructions[i] = decode(line); Store the instruction in the instructions array
+		// memory[i] = decode(line); Store the instruction in the memory array
+		line_number++;
+	}
+		
+	
 }
