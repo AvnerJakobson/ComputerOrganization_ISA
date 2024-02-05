@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
 
 	unsigned int CLK = 0;
 	unsigned int* clk = &CLK;
+	printf("Initial value of clock: %u\n", *clk);
 	
 	unsigned int PC = 0;
 	unsigned int* pc = &PC;
@@ -157,7 +158,7 @@ int main(int argc, char* argv[]) {
 	fclose(output_files.display7seg);
 	fclose(output_files.monitor_txt);
 	fclose(output_files.monitor_yuv);
-	printf("SIMULATOR FINISHED\n");
+	printf("Info: SIMULATOR FINISHED\n");
 	return 0;
 }
 
@@ -195,9 +196,6 @@ int check_output_files(Output_files* files) {
 	}
 }
 
-
-
-
 void memin_decode(FILE* imemin, Instruction* instructions, int* memory){
 	char line[MAX_MEMIN_LINE_SIZE]; 
 	int line_number = 0;
@@ -210,7 +208,6 @@ void memin_decode(FILE* imemin, Instruction* instructions, int* memory){
 	}
 }
 	
-
 Instruction decode_instruction(char* line) {
 	Instruction inst;
 	
@@ -233,23 +230,31 @@ Instruction decode_instruction(char* line) {
 	return inst;
 }
 
-
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files){
 	int next_pc = 0;
 	int exit = 0;
+	printf("Info: Simulation loop started\n");
+
+
 
 	while (exit == 0){ //simulating
 		registers_array[0] = 0; // always 0
 		set_registers_imm1_imm2(instructions+ next_pc, registers_array);
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
-		next_pc++;
+
+		// excecuting the current instruction instruction and get the next PC value for the next itteration
+
+
+		next_pc += 1;
+		*clk += 1;
 		if (next_pc == 10){
+			printf("Info: Simulation loop finished\n");
+			printf("cycles amount = %u\n", *clk);
 			exit = 1;
 		}
 		// finish the calculations of pc to generate the correct trace file	
 	}
 
-	printf("simulation loop\n");
 }
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
