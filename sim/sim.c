@@ -60,6 +60,8 @@ Instruction decode_instruction(char* line) ;
 
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files);
 
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc);
+
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
 ////////////////////////////////////////////// Main Code //////////////////////////////////////////////
@@ -243,7 +245,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// excecuting the current instruction instruction and get the next PC value for the next itteration
-
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc);
 
 		next_pc += 1;
 		*clk += 1;
@@ -281,4 +283,109 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 
 	registers_array[1] = full_imm1;
 	registers_array[2] = full_imm2;
+}
+
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc){
+	int next_pc = 0;
+
+	switch (inst.opcode)
+	{
+	case 0: {  //add
+
+		break;
+	}
+	case 1: {  //sub
+
+		break;
+	}
+	case 2: {  //mac
+
+		break;
+	}
+	case 3: {  //and
+
+		break;
+	}
+	case 4: {  //or
+
+		break;
+	}
+	case 5: {  //xor
+
+		break;
+	}
+	case 6: {  //sll
+
+		break;
+	}
+	case 7: {  //sra
+
+		break;
+	}
+	case 8: {  //srl
+
+		break;
+	}
+	case 9: {  //beq
+
+		break;
+	}
+	case 10: { //bne
+
+		break;
+	}
+	case 11: { //blt
+
+		break;
+	}
+	case 12: { //bgt
+
+		break;
+	}
+	case 13: { //ble
+
+		break;
+	}
+	case 14: { //bge
+
+		break;
+	}
+	case 15: { //jal
+
+		break;
+	}
+	case 16: { //lw
+
+		break;
+	}
+	case 17: { //sw
+
+		break;
+	}
+	case 18: { //reti
+
+		break;
+	}
+	case 19: { //in
+
+		break;
+	}
+	case 20: { //out
+
+		break;
+	}
+	case 21: { //halt
+
+		break;
+	}
+	
+	default:{
+		printf("Error: Invalid opcode\n");
+		exit(1);
+		break;
+	}
+	}
+
+	next_pc = curr_pc + 1;
+	return next_pc;
 }
