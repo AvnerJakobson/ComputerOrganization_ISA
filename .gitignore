@@ -2,3 +2,5 @@
 .vs
 .vscode/
 .vscode
+.sim/sim_output/
+.sim/sim_output
