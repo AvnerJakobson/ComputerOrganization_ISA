@@ -247,6 +247,8 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		// excecuting the current instruction instruction and get the next PC value for the next itteration
 		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc);
 
+		// if next_pc == next_pc before simulate_current_instruction then ?????
+
 		next_pc += 1;
 		*clk += 1;
 		if (next_pc == 10){
@@ -291,40 +293,71 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 	switch (inst.opcode)
 	{
 	case 0: {  //add
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] + registers_array[inst.rt] + registers_array[inst.rm];
+	break;
 	}
 	case 1: {  //sub
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] - registers_array[inst.rt] - registers_array[inst.rm];
+	break;
 	}
 	case 2: {  //mac
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] * registers_array[inst.rt] + registers_array[inst.rm];
+	break;
 	}
 	case 3: {  //and
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] & registers_array[inst.rt] & registers_array[inst.rm];
+	break;
 	}
 	case 4: {  //or
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] | registers_array[inst.rt] | registers_array[inst.rm];
+	break;
 	}
 	case 5: {  //xor
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] ^ registers_array[inst.rt] ^ registers_array[inst.rm];
+	break;
 	}
 	case 6: {  //sll
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] << registers_array[inst.rt];
+	break;
 	}
 	case 7: {  //sra
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+		registers_array[inst.rd] = registers_array[inst.rs] >> registers_array[inst.rt];
+	break;
 	}
 	case 8: {  //srl
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else{
+		// [TODO] TEST THIS 
+		registers_array[inst.rd] = ((unsigned int)registers_array[inst.rs] >> registers_array[inst.rt]);
 
-		break;
+	}
+	
+	break;
 	}
 	case 9: {  //beq
 
@@ -351,12 +384,18 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		break;
 	}
 	case 15: { //jal
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
 
 		break;
 	}
 	case 16: { //lw
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+	
+	break;
 	}
 	case 17: { //sw
 
@@ -367,8 +406,11 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		break;
 	}
 	case 19: { //in
-
-		break;
+	if (inst.rm < 2)
+		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+	else
+	
+	break;
 	}
 	case 20: { //out
 
