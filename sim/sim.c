@@ -5,12 +5,30 @@
 #define MAX_LINE_DEPTH				4096		// maximum line depth as defined in the project
 #define MAX_LINE_DEPTH_DISKIN 		16384		// maximum line depth of the disk as defined in the project
 #define REGISTER_NUM				16			// number of registers as defined in the project
+#define IO_REGISTER_NUM				23			// number of IO registers as defined in the project
 #define REGISTER_SIZE				32			// bits size for each register as defined in the project
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
 
 
 #include <stdio.h>
+#include <string.h>	
 #include <stdlib.h>
+
+/////////////////////////////////////////// [TODO] /////////////////////////////////////////
+// inputs:
+// 		How to handle the diskin file?
+// 		How to hadnle the irq2in file?
+// 
+// functions:
+// 		currently trace is correct up until first interrupt- after understanding how to handle the irq2in file, we can add the interrupt handling to the simulation loop and correct the trace file
+//		 		
+// outputs:
+//		hwregtrace file not writing, maybe because there is no interrupt working currently
+//		 		
+//
+//		only trace and hwregtrace are being written to, the rest of the files are not being written to
+//
+/////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
 
 //////////////////////////////// Structs definitions for simplicity  /////////////////////////////////////
@@ -54,7 +72,9 @@ void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number,
 
 char* get_IORegister_name(int number);
 
-void memin_decode(FILE* imemin, Instruction* instructions, int* memory);
+void imemin_decode(FILE* imemin, Instruction* instructions);
+
+void dmemin_decode(FILE* dmemin, int* memory);
 
 int check_input_files(Input_files* files);
 
@@ -62,9 +82,9 @@ int check_output_files(Output_files* files);
 
 Instruction decode_instruction(char* line) ;
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files);
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters);
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk);
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
@@ -72,6 +92,7 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 int main(int argc, char* argv[]) {
 
 	int registers_array[REGISTER_NUM] = { 0 };	// Initialize all registers to 0
+	int IO_registers_array[IO_REGISTER_NUM] = { 0 };	// Initialize all registers to 0
 
 	unsigned int CLK = 0;
 	unsigned int* clk = &CLK;
@@ -131,9 +152,11 @@ int main(int argc, char* argv[]) {
 	// bring the next instruction from address PC
 
 	// decode the instruction according to the encoding
-	memin_decode(input_files.imemin, instructions, memory);
+	imemin_decode(input_files.imemin, instructions);
+	
+	dmemin_decode(input_files.dmemin, memory);
 
-	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files);
+	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array);
 
 	// end of execution of the instruction
 
@@ -202,7 +225,7 @@ int check_output_files(Output_files* files) {
 	}
 }
 
-void memin_decode(FILE* imemin, Instruction* instructions, int* memory){
+void imemin_decode(FILE* imemin, Instruction* instructions){
 	char line[MAX_MEMIN_LINE_SIZE]; 
 	int line_number = 0;
 	int instruction_number = 0;
@@ -211,6 +234,34 @@ void memin_decode(FILE* imemin, Instruction* instructions, int* memory){
 		instructions[instruction_number] = new_inst;
 		line_number++;
 		instruction_number++;	
+	}
+}
+
+int power(int base, int exp) {
+	if (exp == 0)
+		return 1;
+	return base * power(base, exp - 1);
+}
+
+int hex2dec(char hex_line[]) {
+	int dec = strtoll(hex_line, NULL, 16);
+
+	if (hex_line[0] >= '8' && hex_line[0] <= 'f') {		// Negetive number check
+		dec -= power(2, REGISTER_SIZE);						 
+	}
+
+	return dec;
+}
+
+void dmemin_decode(FILE* imemin ,int* memory){
+	char line[MAX_MEMIN_LINE_SIZE]; 
+	int line_number = 0;
+	while (fgets(line, MAX_MEMIN_LINE_SIZE, imemin) != NULL && line_number < MAX_LINE_DEPTH) {
+		int line_len = strlen(line);
+		line[line_len - 1] = '\0';
+		int mem_dec = hex2dec(line);
+		memory[line_number] = mem_dec;
+		line_number++;
 	}
 }
 	
@@ -236,7 +287,7 @@ Instruction decode_instruction(char* line) {
 	return inst;
 }
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files){
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters){
 	int next_pc = 0;
 	int exit = 0;
 	printf("Info: Simulation loop started\n");
@@ -249,12 +300,12 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// excecuting the current instruction instruction and get the next PC value for the next itteration
-		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk);
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters);
 
 
 		*clk += 1;
-		if (*clk == 20){ // [TODO] in the next cycle there is a segmentation fault. why?
-			printf("Info: Simulation loop finished\n");
+		if (*clk == 200){ 
+			printf("Info: Simulation loop stopped");
 			printf("cycles amount = %u\n", *clk);
 			exit = 1;
 		}
@@ -289,7 +340,7 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 	registers_array[2] = full_imm2;
 }
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk){
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters){
 	int next_pc = 0;
 
 	switch (inst.opcode)
@@ -449,8 +500,7 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 	}
 	
 	case 18: { //reti
-		next_pc = curr_pc + 1; 
-		//next_pc = IORegisters[7]; //[TODO] what is the value of IORegisters[7]?
+		next_pc = IORegisters[7]; 
 		break;
 	}
 	
@@ -458,16 +508,16 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		if (inst.rd < 3)
 			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
 		else
-			//registers_array[inst.rd] = IORegisters[registers_array[inst.rs] + registers_array[inst.rt]];// [TODO] is there any action or just a print?
-		//print_hwregtrace(output_files->hwregtrace, 0, *clk, registers_array[inst.rs] + registers_array[inst.rt], IORegisters[registers_array[inst.rs]+ registers_array[inst.rt]]); //[TODO] what is the value of the read?
+			registers_array[inst.rd] = IORegisters[registers_array[inst.rs] + registers_array[inst.rt]];
+		print_hwregtrace(output_files->hwregtrace, 1, *clk, registers_array[inst.rs] + registers_array[inst.rt], IORegisters[registers_array[inst.rs]+ registers_array[inst.rt]]); 
 		next_pc = curr_pc + 1;
 		break;
 	}
 	
 	case 20: { //out
-		//IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm]; //[TODO] is there any action or just a print?
+		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm]; 
 		next_pc = curr_pc + 1;
-		print_hwregtrace(output_files->hwregtrace, 1, *clk, registers_array[inst.rs] + registers_array[inst.rt], registers_array[inst.rm]);
+		print_hwregtrace(output_files->hwregtrace, 0, *clk, registers_array[inst.rs] + registers_array[inst.rt], registers_array[inst.rm]);
 		break;
 	}
 	
@@ -484,9 +534,9 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number, int DATA){
 	char* IORegister_name = get_IORegister_name(IO_reg_number);
 	if (is_read==1)
-		fprintf(hwregtrace, "%d READ %s %08X ",clk, IORegister_name, DATA);
+		fprintf(hwregtrace, "%d READ %s %08X\n",clk, IORegister_name, DATA);
 	else
-		fprintf(hwregtrace, "%d WRITE %s %08X ",clk,IORegister_name, DATA);
+		fprintf(hwregtrace, "%d WRITE %s %08X\n",clk,IORegister_name, DATA);
 }
 
 char* get_IORegister_name(int number) {
@@ -514,6 +564,5 @@ char* get_IORegister_name(int number) {
 		case 20: return "monitoraddr";
 		case 21: return "monitordata";
 		case 22: return "monitorcmd";
-		default: return "UNKNOWN";
 	}
 }
