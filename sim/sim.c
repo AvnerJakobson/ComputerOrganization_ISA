@@ -50,6 +50,10 @@ typedef struct output_files {
 // trace
 void print_trace(FILE* trace, int* R, int pc, Instruction inst);
 
+void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number, int DATA);
+
+char* get_IORegister_name(int number);
+
 void memin_decode(FILE* imemin, Instruction* instructions, int* memory);
 
 int check_input_files(Input_files* files);
@@ -60,7 +64,7 @@ Instruction decode_instruction(char* line) ;
 
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files);
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc);
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
@@ -245,13 +249,11 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// excecuting the current instruction instruction and get the next PC value for the next itteration
-		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc);
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk);
 
-		// if next_pc == next_pc before simulate_current_instruction then ?????
 
-		next_pc += 1;
 		*clk += 1;
-		if (next_pc == 10){
+		if (*clk == 20){ // [TODO] in the next cycle there is a segmentation fault. why?
 			printf("Info: Simulation loop finished\n");
 			printf("cycles amount = %u\n", *clk);
 			exit = 1;
@@ -287,147 +289,231 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 	registers_array[2] = full_imm2;
 }
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc){
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk){
 	int next_pc = 0;
 
 	switch (inst.opcode)
 	{
 	case 0: {  //add
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] + registers_array[inst.rt] + registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] + registers_array[inst.rt] + registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 1: {  //sub
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] - registers_array[inst.rt] - registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] - registers_array[inst.rt] - registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 2: {  //mac
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] * registers_array[inst.rt] + registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] * registers_array[inst.rt] + registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 3: {  //and
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] & registers_array[inst.rt] & registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] & registers_array[inst.rt] & registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 4: {  //or
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] | registers_array[inst.rt] | registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] | registers_array[inst.rt] | registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 5: {  //xor
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] ^ registers_array[inst.rt] ^ registers_array[inst.rm];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] ^ registers_array[inst.rt] ^ registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 6: {  //sll
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] << registers_array[inst.rt];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] << registers_array[inst.rt];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 7: {  //sra
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-		registers_array[inst.rd] = registers_array[inst.rs] >> registers_array[inst.rt];
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = registers_array[inst.rs] >> registers_array[inst.rt];
+		next_pc = curr_pc + 1;
+		break;
 	}
+
 	case 8: {  //srl
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else{
-		// [TODO] TEST THIS 
-		registers_array[inst.rd] = ((unsigned int)registers_array[inst.rs] >> registers_array[inst.rt]);
-
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			// [TODO] TEST THIS 
+			registers_array[inst.rd] = ((unsigned int)registers_array[inst.rs] >> registers_array[inst.rt]);
+		next_pc = curr_pc + 1;
+		break;
 	}
 	
-	break;
-	}
 	case 9: {  //beq
-
+		if (registers_array[inst.rs] == registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 10: { //bne
-
+		if (registers_array[inst.rs] != registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 11: { //blt
-
+		if (registers_array[inst.rs] < registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 12: { //bgt
-
+		if (registers_array[inst.rs] > registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 13: { //ble
-
+		if (registers_array[inst.rs] <= registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 14: { //bge
-
+		if (registers_array[inst.rs] >= registers_array[inst.rt])
+			next_pc = registers_array[inst.rm] & 0xFFF;
+		else
+			next_pc = curr_pc + 1; 
 		break;
 	}
+	
 	case 15: { //jal
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = curr_pc + 1;
+		next_pc = registers_array[inst.rm] & 0xFFF;
 		break;
 	}
+	
 	case 16: { //lw
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-	
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			registers_array[inst.rd] = memory[registers_array[inst.rs] + registers_array[inst.rt]] + registers_array[inst.rm];
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 17: { //sw
-
+		memory[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm] + registers_array[inst.rd];
+		next_pc = curr_pc + 1;
 		break;
 	}
+	
 	case 18: { //reti
-
+		next_pc = curr_pc + 1; 
+		//next_pc = IORegisters[7]; //[TODO] what is the value of IORegisters[7]?
 		break;
 	}
+	
 	case 19: { //in
-	if (inst.rm < 2)
-		printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
-	else
-	
-	break;
+		if (inst.rd < 3)
+			printf("Info: Cannot change register $zero,$imm1,$imm2 \n");
+		else
+			//registers_array[inst.rd] = IORegisters[registers_array[inst.rs] + registers_array[inst.rt]];// [TODO] is there any action or just a print?
+		//print_hwregtrace(output_files->hwregtrace, 0, *clk, registers_array[inst.rs] + registers_array[inst.rt], IORegisters[registers_array[inst.rs]+ registers_array[inst.rt]]); //[TODO] what is the value of the read?
+		next_pc = curr_pc + 1;
+		break;
 	}
+	
 	case 20: { //out
-
-		break;
-	}
-	case 21: { //halt
-
+		//IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm]; //[TODO] is there any action or just a print?
+		next_pc = curr_pc + 1;
+		print_hwregtrace(output_files->hwregtrace, 1, *clk, registers_array[inst.rs] + registers_array[inst.rt], registers_array[inst.rm]);
 		break;
 	}
 	
-	default:{
-		printf("Error: Invalid opcode\n");
-		exit(1);
+	case 21: { //halt
+		next_pc = -1;
 		break;
 	}
+
 	}
 
-	next_pc = curr_pc + 1;
 	return next_pc;
+}
+
+void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number, int DATA){
+	char* IORegister_name = get_IORegister_name(IO_reg_number);
+	if (is_read==1)
+		fprintf(hwregtrace, "%d READ %s %08X ",clk, IORegister_name, DATA);
+	else
+		fprintf(hwregtrace, "%d WRITE %s %08X ",clk,IORegister_name, DATA);
+}
+
+char* get_IORegister_name(int number) {
+	switch (number) {
+		case 0: return "irq0enable";
+		case 1: return "irq1enable";
+		case 2: return "irq2enable";
+		case 3: return "irq0status";
+		case 4: return "irq1status";
+		case 5: return "irq2status";
+		case 6: return "irqhandler";
+		case 7: return "irqreturn";
+		case 8: return "clks";
+		case 9: return "leds";
+		case 10: return "display7seg";
+		case 11: return "timerenable";
+		case 12: return "timercurrent";
+		case 13: return "timermax";
+		case 14: return "diskcmd";
+		case 15: return "disksector";
+		case 16: return "diskbuffer";
+		case 17: return "diskstatus";
+		case 18: return "reserved";
+		case 19: return "reserved";
+		case 20: return "monitoraddr";
+		case 21: return "monitordata";
+		case 22: return "monitorcmd";
+		default: return "UNKNOWN";
+	}
 }
