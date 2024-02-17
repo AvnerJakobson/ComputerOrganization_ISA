@@ -8,6 +8,9 @@
 #define IO_REGISTER_NUM				23			// number of IO registers as defined in the project
 #define REGISTER_SIZE				32			// bits size for each register as defined in the project
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
+#define MAX_DISK_LINE_DEPTH			16384		// maximum line depth of the disk as defined in the project
+#define MAX_DISK_LINE_SIZE			10			// max size of each line in disk.txt as defined in the project
+#define MAX_IRQ2IN_LINE_SIZE		10			// max size of each line in irq2in.txt as defined in the project
 
 
 #include <stdio.h>
@@ -65,7 +68,6 @@ typedef struct output_files {
 
 /////////////////////////////////////// Function declarations /////////////////////////////////////////
 
-// trace
 void print_trace(FILE* trace, int* R, int pc, Instruction inst);
 
 void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number, int DATA);
@@ -76,17 +78,27 @@ void imemin_decode(FILE* imemin, Instruction* instructions);
 
 void dmemin_decode(FILE* dmemin, int* memory);
 
+void diskin_decode(FILE* diskin,int* disk);
+
+void irq2in_decode(FILE* irq2in,int* irq2in_memory);
+
 int check_input_files(Input_files* files);
 
 int check_output_files(Output_files* files);
 
-Instruction decode_instruction(char* line) ;
+Instruction decode_instruction(char* line);
+
+int power(int base, int exp);
 
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters);
 
 int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
+
+int hex2dec(char hex_line[]);
+
+
 
 ////////////////////////////////////////////// Main Code //////////////////////////////////////////////
 int main(int argc, char* argv[]) {
@@ -114,6 +126,20 @@ int main(int argc, char* argv[]) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
+	
+	int* disk = (int*)malloc(MAX_DISK_LINE_DEPTH * sizeof(disk));
+	if (disk == NULL) {
+		printf("Memory allocation failed\n");
+		exit(1);
+	}
+
+	// TODO is there a max for irq2in.txt file? if so, change the param MAX_DISK_LINE_DEPTH to the correct value
+	int* irq2in_memory = (int*)malloc(MAX_DISK_LINE_DEPTH * sizeof(irq2in_memory));
+	if (irq2in_memory == NULL) {
+		printf("Memory allocation failed\n");
+		exit(1);
+	}
+
 
 	// have an array that stores all the instructions after translating them from the input files
 	Instruction instructions[MAX_LINE_DEPTH];
@@ -145,16 +171,20 @@ int main(int argc, char* argv[]) {
 	if (check_output_files(&output_files) == 1) {
 		return 1;
 	}
-
-	// main code goes here- read the input files and store the instructions in the instructions array
-	// then execute the instructions and write the output to the output files
 	
-	// bring the next instruction from address PC
 
-	// decode the instruction according to the encoding
+	// decode the input files
 	imemin_decode(input_files.imemin, instructions);
 	
 	dmemin_decode(input_files.dmemin, memory);
+
+	// TODO test when ready
+	// diskin_decode(input_files.diskin, disk);
+
+	// TODO test when ready
+	//irq2in_decode(input_files.irq2in, irq2in_memory);
+
+	// start the simulation loop
 
 	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array);
 
@@ -173,6 +203,8 @@ int main(int argc, char* argv[]) {
 	// Free allocations and close all files
 
 	free(memory);
+	free(disk);
+	free(irq2in_memory);
 	fclose(input_files.imemin);
 	fclose(input_files.dmemin);
 	fclose(input_files.diskin);
@@ -190,7 +222,6 @@ int main(int argc, char* argv[]) {
 	printf("Info: SIMULATOR FINISHED\n");
 	return 0;
 }
-
 
 
 
@@ -236,6 +267,33 @@ void imemin_decode(FILE* imemin, Instruction* instructions){
 		instruction_number++;	
 	}
 }
+
+void diskin_decode(FILE* diskin,int* disk){
+	// TODO: implement this function and test if the max line depth, max disk line size is correct
+	char line[MAX_DISK_LINE_SIZE]; 
+	int line_number = 0;
+	while (fgets(line, MAX_DISK_LINE_SIZE, diskin) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
+		int line_len = strlen(line);
+		line[line_len - 1] = '\0';
+		int disk_dec = hex2dec(line);
+		disk[line_number] = disk_dec;
+		line_number++;
+	}
+
+}
+
+void irq2in_decode(FILE* irq2in,int* irq2in_memory){
+	char line[MAX_IRQ2IN_LINE_SIZE];
+	int line_number = 0;
+	while (fgets(line, MAX_IRQ2IN_LINE_SIZE, irq2in) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
+		int line_len = strlen(line);
+		line[line_len - 1] = '\0';
+		int irq2in_dec = atoi(line);
+		irq2in_memory[line_number] = irq2in_dec;
+		line_number++;
+	}
+}	
+
 
 int power(int base, int exp) {
 	if (exp == 0)
@@ -299,7 +357,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		set_registers_imm1_imm2(instructions+ next_pc, registers_array);
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
-		// excecuting the current instruction instruction and get the next PC value for the next itteration
+		// executing the current instruction instruction and get the next PC value for the next iteration
 		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters);
 
 
@@ -525,6 +583,11 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		next_pc = -1;
 		break;
 	}
+
+	default:
+		printf("Error: Invalid opcode. Jumping to next PC\n");
+		next_pc = curr_pc + 1;
+		break;
 
 	}
 
