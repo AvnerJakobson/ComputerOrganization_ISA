@@ -10,7 +10,6 @@
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
 #define MAX_DISK_LINE_DEPTH			16384		// maximum line depth of the disk as defined in the project
 #define MAX_DISK_LINE_SIZE			10			// max size of each line in disk.txt as defined in the project
-#define MAX_IRQ2IN_LINE_SIZE		10			// max size of each line in irq2in.txt as defined in the project
 
 
 #include <stdio.h>
@@ -80,7 +79,7 @@ void dmemin_decode(FILE* dmemin, int* memory);
 
 void diskin_decode(FILE* diskin,int* disk);
 
-void irq2in_decode(FILE* irq2in,int* irq2in_memory);
+int get_next_irq2(FILE* irq2in, int curr_irq2);
 
 int check_input_files(Input_files* files);
 
@@ -114,6 +113,7 @@ int main(int argc, char* argv[]) {
 	unsigned int* pc = &PC;
 
 
+
 	// Initialize the input and output files to NULL to avoid garbage values
 
 	Input_files input_files = { NULL, NULL, NULL, NULL };
@@ -133,12 +133,6 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 
-	// TODO is there a max for irq2in.txt file? if so, change the param MAX_DISK_LINE_DEPTH to the correct value
-	int* irq2in_memory = (int*)malloc(MAX_DISK_LINE_DEPTH * sizeof(irq2in_memory));
-	if (irq2in_memory == NULL) {
-		printf("Memory allocation failed\n");
-		exit(1);
-	}
 
 
 	// have an array that stores all the instructions after translating them from the input files
@@ -181,8 +175,6 @@ int main(int argc, char* argv[]) {
 	// TODO test when ready
 	// diskin_decode(input_files.diskin, disk);
 
-	// TODO test when ready
-	//irq2in_decode(input_files.irq2in, irq2in_memory);
 
 	// start the simulation loop
 
@@ -204,7 +196,6 @@ int main(int argc, char* argv[]) {
 
 	free(memory);
 	free(disk);
-	free(irq2in_memory);
 	fclose(input_files.imemin);
 	fclose(input_files.dmemin);
 	fclose(input_files.diskin);
@@ -282,17 +273,19 @@ void diskin_decode(FILE* diskin,int* disk){
 
 }
 
-void irq2in_decode(FILE* irq2in,int* irq2in_memory){
-	char line[MAX_IRQ2IN_LINE_SIZE];
-	int line_number = 0;
-	while (fgets(line, MAX_IRQ2IN_LINE_SIZE, irq2in) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
-		int line_len = strlen(line);
-		line[line_len - 1] = '\0';
-		int irq2in_dec = atoi(line);
-		irq2in_memory[line_number] = irq2in_dec;
-		line_number++;
+int get_next_irq2(FILE* irq2in, int curr_irq2) {
+	char line[256]; // Buffer to hold the line. Adjust the size as needed.
+	int next_irq2 = -1;
+
+	if (fgets(line, sizeof(line), irq2in) == NULL) {
+		return -1; // Return -1 if we've reached the end of the file or an error occurred.
 	}
-}	
+	next_irq2 = atoi(line); // Convert the line to an integer and return it.
+	if (next_irq2 < curr_irq2) {
+		return -1;
+	}
+	return next_irq2; // Convert the line to an integer and return it.
+}
 
 
 int power(int base, int exp) {
@@ -348,9 +341,13 @@ Instruction decode_instruction(char* line) {
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters){
 	int next_pc = 0;
 	int exit = 0;
+	int next_irq2 = -1;
+
 	printf("Info: Simulation loop started\n");
 
-
+	// [TODO] Use this funcion in the fight place in the code- imlement ipq2 interrupt handling
+	// [TODO] irq = (irq0enable & irq0status) | (irq1enable & irq1status) | (irq2enable & irq2status) implemet this in the simulation loop
+	next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
 
 	while (exit == 0){ //simulating
 		registers_array[0] = 0; // always 0
