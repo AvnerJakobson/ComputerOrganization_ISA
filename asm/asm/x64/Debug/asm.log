@@ -1,4 +1,5 @@
 ﻿  asm.c
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(126,4): warning C4013: 'exit' undefined; assuming extern returning int
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(120,8): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[51]'
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(131,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[500]'
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(213,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[51]'
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(166): warning C4715: 'clean_line': not all control paths return a value
   asm.vcxproj -> C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\x64\Debug\asm.exe
