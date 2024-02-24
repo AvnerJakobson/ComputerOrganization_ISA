@@ -19,13 +19,10 @@
 /////////////////////////////////////////// [TODO] /////////////////////////////////////////
 // inputs:
 // 		How to handle the diskin file?
-// 		How to hadnle the irq2in file?
+// 		Handle irq1 and irq0
 // 
-// functions:
-// 		currently trace is correct up until first interrupt- after understanding how to handle the irq2in file, we can add the interrupt handling to the simulation loop and correct the trace file
 //		 		
 // outputs:
-//		hwregtrace file not writing, maybe because there is no interrupt working currently
 //		 		
 //
 //		only trace and hwregtrace are being written to, the rest of the files are not being written to
@@ -91,11 +88,17 @@ int power(int base, int exp);
 
 void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters);
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters);
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
 int hex2dec(char hex_line[]);
+
+void create_cycles_file(FILE* cycles, unsigned int* clk);
+
+void create_regout_file(FILE* regout, int* registers_array);
+
+void create_dmemout_file(FILE* dmemout, int* memory);
 
 
 
@@ -126,12 +129,14 @@ int main(int argc, char* argv[]) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
+	memset(memory, 0, MAX_LINE_DEPTH * sizeof(memory));	
 	
 	int* disk = (int*)malloc(MAX_DISK_LINE_DEPTH * sizeof(disk));
 	if (disk == NULL) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
+	memset(disk, 0, MAX_DISK_LINE_DEPTH * sizeof(disk));
 
 
 
@@ -182,16 +187,20 @@ int main(int argc, char* argv[]) {
 
 	// end of execution of the instruction
 
-	// print the values of the contents of the data memory to the dmemout file
-	// print the values of the the values of the registers R3-R15 to the regout file
-	// print the trace of the instruction to the trace file
-	// print the values of the hardware registers to the hwregtrace file
-	// print the number of cycles to the cycles file
 	// print the values of the LEDs to the leds file
 	// print the values of the display7seg to the display7seg file
 	// print the values of the contents of the disk drive to diskout file
 	// print the values of the monitor to the monitor_txt and monitor_yuv files
+	
+	// print the values of the contents of the data memory to the dmemout file
+	create_dmemout_file(output_files.dmemout, memory);
+	
+	// print the values of the the values of the registers R3-R15 to the regout file
+	create_regout_file(output_files.regout, registers_array);
 
+	// print the number of cycles to the cycles file
+	create_cycles_file(output_files.cycles, clk);
+	
 	// Free allocations and close all files
 
 	free(memory);
@@ -274,13 +283,13 @@ void diskin_decode(FILE* diskin,int* disk){
 }
 
 int get_next_irq2(FILE* irq2in, int curr_irq2) {
-	char line[256]; // Buffer to hold the line. Adjust the size as needed.
+	char line[256]; // Buffer to hold the line.
 	int next_irq2 = -1;
 
 	if (fgets(line, sizeof(line), irq2in) == NULL) {
 		return -1; // Return -1 if we've reached the end of the file or an error occurred.
 	}
-	next_irq2 = atoi(line); // Convert the line to an integer and return it.
+	next_irq2 = atoi(line); // Convert the line to an integer and return it if it's valid.
 	if (next_irq2 < curr_irq2) {
 		return -1;
 	}
@@ -342,28 +351,47 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 	int next_pc = 0;
 	int exit = 0;
 	int next_irq2 = -1;
+	int irq = 0;
+	int IN_ISR = 0;
+	int* in_isr = &IN_ISR;
 
 	printf("Info: Simulation loop started\n");
 
-	// [TODO] Use this funcion in the fight place in the code- imlement ipq2 interrupt handling
-	// [TODO] irq = (irq0enable & irq0status) | (irq1enable & irq1status) | (irq2enable & irq2status) implemet this in the simulation loop
+	
+	// Check for inital value of next_irq2
 	next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
 
 	while (exit == 0){ //simulating
+
+
+		irq = (IORegisters[0] & IORegisters[3]) | (IORegisters[1] & IORegisters[4]) | (IORegisters[2] & IORegisters[5]);
+
+		if (irq == 1 && *in_isr == 0) {
+			*in_isr = 1;
+			IORegisters[7] = next_pc;
+			next_pc = IORegisters[6];
+		}
+
+		if (*clk == next_irq2) {
+			IORegisters[5] = 1; // irq 2 is triggered
+			next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
+		}
+		else{
+			IORegisters[5] = 0; // irq 2 is not triggered
+		}
+
 		registers_array[0] = 0; // always 0
-		set_registers_imm1_imm2(instructions+ next_pc, registers_array);
+		set_registers_imm1_imm2(instructions+ next_pc, registers_array);		
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// executing the current instruction instruction and get the next PC value for the next iteration
-		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters);
-
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr);
 
 		*clk += 1;
-		if (*clk == 200){ 
-			printf("Info: Simulation loop stopped");
-			printf("cycles amount = %u\n", *clk);
+		if (next_pc == -1) { // HALT - exiting the simulator
 			exit = 1;
 		}
+
 		// finish the calculations of pc to generate the correct trace file	
 	}
 
@@ -395,7 +423,7 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 	registers_array[2] = full_imm2;
 }
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters){
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr){
 	int next_pc = 0;
 
 	switch (inst.opcode)
@@ -555,6 +583,7 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 	}
 	
 	case 18: { //reti
+		*in_isr = 0;
 		next_pc = IORegisters[7]; 
 		break;
 	}
@@ -594,9 +623,9 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 void print_hwregtrace(FILE* hwregtrace, int is_read, int clk, int IO_reg_number, int DATA){
 	char* IORegister_name = get_IORegister_name(IO_reg_number);
 	if (is_read==1)
-		fprintf(hwregtrace, "%d READ %s %08X\n",clk, IORegister_name, DATA);
+		fprintf(hwregtrace, "%d READ %s %08x\n",clk, IORegister_name, DATA);
 	else
-		fprintf(hwregtrace, "%d WRITE %s %08X\n",clk,IORegister_name, DATA);
+		fprintf(hwregtrace, "%d WRITE %s %08x\n",clk,IORegister_name, DATA);
 }
 
 char* get_IORegister_name(int number) {
@@ -624,5 +653,32 @@ char* get_IORegister_name(int number) {
 		case 20: return "monitoraddr";
 		case 21: return "monitordata";
 		case 22: return "monitorcmd";
+	}
+}
+
+void create_cycles_file(FILE* cycles, unsigned int* clk){
+	fprintf(cycles, "%d\n", *clk);
+}
+
+void create_regout_file(FILE* regout, int* registers_array){
+	for (int i = 3; i < REGISTER_NUM; i++) {
+		fprintf(regout, "%08X\n", registers_array[i]);
+	}
+}
+
+
+void create_dmemout_file(FILE* dmemout, int* memory){
+	int last_non_zero_line = 0;
+	for (int i = 0; i < MAX_LINE_DEPTH; i++) {
+		if (memory[i] != 0) {
+			last_non_zero_line = i;
+		}
+	}
+
+	for (int i = 0; i < MAX_LINE_DEPTH; i++) {
+		fprintf(dmemout, "%08X\n", memory[i]);
+		if (i == last_non_zero_line) {
+			break;
+		}
 	}
 }
