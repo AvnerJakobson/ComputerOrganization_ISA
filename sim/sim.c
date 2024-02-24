@@ -100,6 +100,10 @@ void create_regout_file(FILE* regout, int* registers_array);
 
 void create_dmemout_file(FILE* dmemout, int* memory);
 
+void print_leds(FILE* leds,unsigned int* clk, int leds_value);
+
+void increment_clks_IORegister(int* IORegisters);
+
 
 
 ////////////////////////////////////////////// Main Code //////////////////////////////////////////////
@@ -187,7 +191,6 @@ int main(int argc, char* argv[]) {
 
 	// end of execution of the instruction
 
-	// print the values of the LEDs to the leds file
 	// print the values of the display7seg to the display7seg file
 	// print the values of the contents of the disk drive to diskout file
 	// print the values of the monitor to the monitor_txt and monitor_yuv files
@@ -233,6 +236,10 @@ void print_trace(FILE* trace, int* R, int pc, Instruction inst) {
 	fprintf(trace, "%08x %08x %08x %08x ", R[4], R[5], R[6], R[7]);
 	fprintf(trace, "%08x %08x %08x %08x ", R[8], R[9], R[10], R[11]);
 	fprintf(trace, "%08x %08x %08x %08x\n", R[12], R[13], R[14], R[15]);
+}
+
+void print_leds(FILE* leds, unsigned int* clk, int leds_value) {
+	fprintf(leds, "%d %08x\n", *clk, leds_value);
 }
 
 
@@ -364,6 +371,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 	while (exit == 0){ //simulating
 
 
+
 		irq = (IORegisters[0] & IORegisters[3]) | (IORegisters[1] & IORegisters[4]) | (IORegisters[2] & IORegisters[5]);
 
 		if (irq == 1 && *in_isr == 0) {
@@ -388,6 +396,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr);
 
 		*clk += 1;
+		increment_clks_IORegister(IORegisters);
 		if (next_pc == -1) { // HALT - exiting the simulator
 			exit = 1;
 		}
@@ -599,7 +608,12 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 	}
 	
 	case 20: { //out
-		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm]; 
+		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm];
+
+		// Turn on leds
+		if (registers_array[inst.rs] + registers_array[inst.rt] == 9) {
+			print_leds(output_files->leds, clk, registers_array[inst.rm]);
+		} 
 		next_pc = curr_pc + 1;
 		print_hwregtrace(output_files->hwregtrace, 0, *clk, registers_array[inst.rs] + registers_array[inst.rt], registers_array[inst.rm]);
 		break;
@@ -682,3 +696,11 @@ void create_dmemout_file(FILE* dmemout, int* memory){
 		}
 	}
 }
+
+void increment_clks_IORegister(int* IORegisters) {
+	if (IORegisters[8] == 0xFFFFFFFF)
+		IORegisters[8] = 0;
+	else
+		IORegisters[8] ++;
+}
+
