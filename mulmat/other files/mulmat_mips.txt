@@ -1,0 +1,55 @@
+.data
+    matrix1:    .word 1, 2, 3, 4
+                .word 5, 6, 7, 8
+                .word 9, 10, 11, 12
+                .word 13, 14, 15, 16
+
+    matrix2:    .word 1, 0, 0, 0
+                .word 0, 1, 0, 0
+                .word 0, 0, 1, 0
+                .word 0, 0, 0, 1
+
+    result:     .word 0:16
+
+.text
+    main:
+        la $t0, matrix1     # Load address of matrix1
+        la $t1, matrix2     # Load address of matrix2
+        la $t2, result      # Load address of result matrix
+        li $t3, 4           # Load 4 (number of rows/cols)
+
+    outer_loop:
+        li $t4, 0           # Initialize result matrix row counter
+        li $t5, 0           # Initialize matrix2 column counter
+
+    inner_loop:
+        li $t6, 0           # Initialize result value
+        li $t7, 0           # Initialize matrix1 column counter
+
+        mul_inner_loop:
+            lw $s0, 0($t0)      # Load matrix1 element
+            lw $s1, 0($t1)      # Load matrix2 element
+            mul $s0, $s0, $s1  # Multiply elements
+            add $t0, $t0, 4     # Move to next element in matrix1
+            add $t1, $t1, 16    # Move to next row in matrix2
+            add $t7, $t7, 1     # Increment column counter
+            add $t6, $t6, $s0   # Accumulate result
+
+            bne $t7, $t3, mul_inner_loop   # Continue loop if not end of column
+            add $t7, $t7, -4    # Reset matrix1 column counter
+            add $t0, $t0, -16   # Reset to first element in current row of matrix1
+
+            add $t5, $t5, 4     # Move to next column in matrix2
+            bne $t5, $t3, inner_loop       # Continue loop if not end of column
+            add $t5, $t5, -16   # Reset matrix2 column counter
+            add $t1, $t1, -16   # Reset to first row in matrix2
+
+        sw $t6, 0($t2)      # Store result value
+        add $t4, $t4, 1     # Increment result matrix row counter
+        add $t2, $t2, 4     # Move to next row in result matrix
+
+        bne $t4, $t3, outer_loop   # Continue loop if not end of rows
+
+    # End of program
+    li $v0, 10          # Exit syscall
+    syscall
