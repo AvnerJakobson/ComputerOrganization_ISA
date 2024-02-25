@@ -275,7 +275,9 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
     int mem_counter = 0;
     int mem_addr = 0;
     int mem_data = 0;
+    int line_cnt = 1;
     while (!feof(fptr)) {
+        printf("Line %d ", line_cnt++);
         if (!line) {
             printf("Memory allocation failed\n");
             exit(1);
@@ -342,6 +344,7 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
         printf("Result: %012llX\n", instructions->result);
         instructions++;
         counter++;
+
     }
     return counter;
 }
