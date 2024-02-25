@@ -12,7 +12,7 @@ binom:
 	sw $zero, $sp, $imm2, $ra, 0, 1				# save return address
 	sw $zero, $sp, imm2, $s0, 0, 0 				# save $s0
 	add $a0, $a0, $imm1, $zero, -1, 0 			# else, set n = n-1
-	jal $ra, $zero, $imm1, binom, 0	 			# binom(n-1, k)
+	jal $ra, $zero, $zero, $imm1, binom, 0	 	# binom(n-1, k)
 	add $s0, $v0, $zero, $zero, 0, 0 			# save recursion result to $s0
 	lw $a0, $sp, $imm1, $imm2, 3, -1 			# load n-1
 	lw $a1, $sp, $imm1, $imm2, 2, -1 			# load k-1
