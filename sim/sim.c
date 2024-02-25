@@ -17,15 +17,22 @@
 #include <stdlib.h>
 
 /////////////////////////////////////////// [TODO] /////////////////////////////////////////
-// inputs:
-// 		How to handle the diskin file?
-// 		Handle irq1 and irq0
-// 
-//		 		
-// outputs:
-//		 		
-//
-//		only trace and hwregtrace are being written to, the rest of the files are not being written to
+// Todos:
+//		Disk:
+// 		* Handle the diskin file
+//		* Handle the disk drive
+// 		* Handle the diskout file
+//		
+//		Interruptions:
+// 		* Handle irq1
+//		* When does the irq0status change back to zero?
+//		* Make sure that the algorithm for interrupts is ok. If 2 interrupts happen at the same time, what should happen to the status of the interrupt not handled?
+//		
+//		monitor:
+//		* Handle the monitor: both monitor_txt and monitor_yuv.
+//		
+//		Timer:
+//		* Check the implementation of the timer
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
@@ -102,7 +109,12 @@ void create_dmemout_file(FILE* dmemout, int* memory);
 
 void print_leds(FILE* leds,unsigned int* clk, int leds_value);
 
+void print_display7seg(FILE* display7seg,unsigned int* clk, int display7seg_value);
+
 void increment_clks_IORegister(int* IORegisters);
+
+void increment_timer(int* IORegisters);
+
 
 
 
@@ -165,8 +177,8 @@ int main(int argc, char* argv[]) {
 	output_files.hwregtrace = fopen(argv[8], "w");
 	output_files.cycles = fopen(argv[9], "w");
 	output_files.leds = fopen(argv[10], "w");
-	output_files.diskout = fopen(argv[11], "w");
-	output_files.display7seg = fopen(argv[12], "w");
+	output_files.display7seg = fopen(argv[11], "w");
+	output_files.diskout = fopen(argv[12], "w");
 	output_files.monitor_txt = fopen(argv[13], "w");
 	output_files.monitor_yuv = fopen(argv[14], "w");
 
@@ -186,7 +198,6 @@ int main(int argc, char* argv[]) {
 
 
 	// start the simulation loop
-
 	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array);
 
 	// end of execution of the instruction
@@ -242,6 +253,20 @@ void print_leds(FILE* leds, unsigned int* clk, int leds_value) {
 	fprintf(leds, "%d %08x\n", *clk, leds_value);
 }
 
+void print_display7seg(FILE* display7seg,unsigned int* clk, int display7seg_value){
+	// Convert display7seg_value to individual digits
+	int digit8 = (display7seg_value >> 28) & 0xF;
+	int digit7 = (display7seg_value >> 24) & 0xF;
+	int digit6 = (display7seg_value >> 20) & 0xF;
+	int digit5 = (display7seg_value >> 16) & 0xF;
+	int digit4 = (display7seg_value >> 12) & 0xF;
+	int digit3 = (display7seg_value >> 8) & 0xF;
+	int digit2 = (display7seg_value >> 4) & 0xF;
+	int digit1 = display7seg_value & 0xF;
+
+	// Print the digits to the display7seg file
+	fprintf(display7seg, "%d %x%x%x%x%x%x%x%x\n", *clk, digit8, digit7, digit6, digit5, digit4, digit3, digit2, digit1);
+}
 
 int check_input_files(Input_files* files) {
 	if (files->imemin == NULL || files->dmemin == NULL || files->diskin == NULL || files->irq2in == NULL) {
@@ -370,8 +395,6 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 
 	while (exit == 0){ //simulating
 
-
-
 		irq = (IORegisters[0] & IORegisters[3]) | (IORegisters[1] & IORegisters[4]) | (IORegisters[2] & IORegisters[5]);
 
 		if (irq == 1 && *in_isr == 0) {
@@ -396,6 +419,9 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr);
 
 		*clk += 1;
+
+		increment_timer(IORegisters);
+
 		increment_clks_IORegister(IORegisters);
 		if (next_pc == -1) { // HALT - exiting the simulator
 			exit = 1;
@@ -608,13 +634,51 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 	}
 	
 	case 20: { //out
+		if ((registers_array[inst.rs] + registers_array[inst.rt]) == 18 || (registers_array[inst.rs] + registers_array[inst.rt]) == 19){
+			printf("Warning: Cannot change register 18-19 in IOregisters\n");
+			break;
+		}
+
 		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm];
 
-		// Turn on leds
-		if (registers_array[inst.rs] + registers_array[inst.rt] == 9) {
-			print_leds(output_files->leds, clk, registers_array[inst.rm]);
-		} 
+		switch(registers_array[inst.rs] + registers_array[inst.rt])
+		{
+			case 8: //clks
+				*clk = registers_array[inst.rm];
+				break;
+			case 9: //leds
+				print_leds(output_files->leds, clk, registers_array[inst.rm]);
+				break;
+			case 10: //display7seg
+				print_display7seg(output_files->display7seg, clk, registers_array[inst.rm]);
+				break;
+			case 11: //timerenable
+				break;
+			case 12: //timercurrent
+				break;
+			case 13: //timermax
+				break;
+			case 14: //diskcmd
+				break;
+			case 15: //disksector
+				break;
+			case 16: //diskbuffer
+				break;
+			case 17: //diskstatus
+				break;
+			case 18: //reserved
+				break;
+			case 19: //reserved
+				break;
+			case 20: //monitoraddr
+				break;
+			case 21: //monitordata
+				break;
+			case 22: //monitorcmd
+				break;
+		}
 		next_pc = curr_pc + 1;
+
 		print_hwregtrace(output_files->hwregtrace, 0, *clk, registers_array[inst.rs] + registers_array[inst.rt], registers_array[inst.rm]);
 		break;
 	}
@@ -704,3 +768,16 @@ void increment_clks_IORegister(int* IORegisters) {
 		IORegisters[8] ++;
 }
 
+void increment_timer(int* IORegisters) {
+	if (IORegisters[11]== 1)
+	{
+		if (IORegisters[12] == IORegisters[13]){
+			IORegisters[3] = 1;
+			IORegisters[12] = 0;
+		}
+		else
+			IORegisters[12] ++;
+			IORegisters[3] = 1; // [TODO] is this correct? should the irq change back to 0 after making sure that the ISR is called? (maybe it was called about irq2 and not irq0)
+
+	}
+}
