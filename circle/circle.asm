@@ -8,7 +8,7 @@
 	mac $s1, $s1, $s1, $imm1, 128, 0 			# y_center = 256*256 + 128, should be the center pixel
 
 Loop:
-	bge $zero, $t0, $t1, $imm1, END, 0 			# if x >= y, END	
+	bgt $zero, $t0, $t1, $imm1, END, 0 			# if x > y, END	
 	beq $zero, $zero, $zero, $imm1, plot, 0 	# plot
 	add $t0, $t0, $imm1, $zero, 1, 0 			# x++
 	blt, $zero, $t2, $zero, $imm1, inc_p, 0 	# if p < 0
