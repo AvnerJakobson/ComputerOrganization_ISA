@@ -347,6 +347,10 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
 }
 
 int main(int argc, char* argv[]) {
+    if (argc != 4) {
+		printf("Error: Wrong number of arguments\n");
+		return 1;
+	}
     int num_of_labels;
     int num_of_instructions;
     
@@ -376,7 +380,12 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_of_labels; ++i) {
         printf("Label Name: %s, Address: %03X\n", labels[i].label_name, labels[i].label_addr);
     }
-    FILE* imemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\imemin.txt", "w");
+    //FILE* imemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\imemin.txt", "w");
+    FILE* imemin_file = fopen(argv[2],"w");
+    if (!imemin_file) {
+		printf("Error: Can't write %s\n", argv[2]);
+		return 1;
+	}
     num_of_instructions = second_pass(asm_file, instructions, labels, num_of_labels, dmem);
     fclose(asm_file);
     for (int i = 0; i < num_of_instructions; ++i) {
@@ -391,11 +400,22 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 	}
-    FILE* dmemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\dmemin.txt", "w");
-	for (int i = 0; i < max_addr; i++) {
-		fprintf(dmemin_file, "%08X\n", dmem[i]);
-	}
+    //FILE* dmemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\dmemin.txt", "w");
+    FILE* dmemin_file = fopen(argv[3], "w");
+    if (!dmemin_file) {
+        printf("Error: Can't write %s\n", argv[3]);
+		return 1;
+    }
 
+    if (max_addr != 0) {
+        for (int i = 0; i < max_addr; i++) {
+            fprintf(dmemin_file, "%08X\n", dmem[i]);
+        }
+    }
+    else {
+		fprintf(dmemin_file, "00000000\n");
+	}
+    fclose(dmemin_file);
 
     return 0;
 }
