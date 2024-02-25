@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #define MAX_LINE_LENGTH 500
 #define MAX_LABEL_NAME 50
@@ -131,9 +132,7 @@ char* clean_line(char* line, int pass_num) {
     char* last = &last_string;
     char* clean_line = line;
     int i = 0;
-    if (line_is_word(line)) {
-        return line;
-    }
+
     if (pass_num == 1){
 		while ((*line != '\n') && (*line != '#')) {
 			if (!((*line == ' ') || (*line == '\t')))
@@ -163,13 +162,32 @@ char* clean_line(char* line, int pass_num) {
             return head;
         }
     }
-}
+    if (pass_num == 3) {
+        int length = strlen(line);
+        int j = 0;
+        bool last_char_not_space = true;
+
+        for (int i = 0; i < length; i++) {
+            if (!isspace(line[i]) || last_char_not_space) {
+
+                clean_line[j] = line[i];
+                j++;
+            }
+            if (line[i] == ' ') last_char_not_space = false;
+            else last_char_not_space = true;
+        }
+
+        clean_line[j] = '\0';
+        return clean_line;
+    }
+
+ }
+	
 
 int handle_imm(char* imm, label* labels, int num_of_labels) {
-    printf("imm: %s\n", imm);
+    long long ret;
     for (int i = 0; i < num_of_labels; i++) {
         if (strcmp(imm, labels[i].label_name) == 0) {
-            printf("returning: %012llX\n", (long long)labels[i].label_addr);
             return labels[i].label_addr;
         }
     }
@@ -178,12 +196,13 @@ int handle_imm(char* imm, label* labels, int num_of_labels) {
         imm[i] = tolower(imm[i]);
     }
     if (imm[0] == '0' && imm[1] == 'x') {
-        printf("returning: %012llX\n", (signed long long)strtol(imm, NULL, 16));
-        return (int)strtol(imm, NULL, 16);
+        ret = (long int)strtol(imm, NULL, 16);
+        
+        return ret;
     }
     else {
-        printf("returning: %012llX\n", (signed long long)atoi(imm));
-        return (signed long long)atoi(imm);
+        ret = (long int)atoi(imm, NULL, 16);
+        return ret;
     }
 }
 
@@ -212,7 +231,7 @@ int first_pass(FILE* fptr, label* labels) {
     char label[MAX_LABEL_NAME + 1];  //+1 for the null terminator
     char* label_p = &label;
     int counter = 0, addr = 0;
-
+    
     while (!feof(fptr)) {
         if (!line) {
             printf("Memory allocation failed\n");
@@ -223,6 +242,9 @@ int first_pass(FILE* fptr, label* labels) {
             continue;
         }
         if (line_is_label(line)) {
+            char* dlr_idx = strchr(line, '$');
+            char* cmnt_idx = strchr(line, '#');
+
             char* cleaned = clean_line(line,1);
             int idx=0;            
             labels->label_addr = addr;
@@ -230,6 +252,14 @@ int first_pass(FILE* fptr, label* labels) {
             strcpy(labels->label_name, label_p);
             labels++;
             counter++;
+            if (dlr_idx) {
+				if (cmnt_idx) {
+                    if (dlr_idx > cmnt_idx) {   //command is commented
+						continue;
+					}
+				}
+                addr++;
+			}
         }
         else {
             addr++;
@@ -238,10 +268,13 @@ int first_pass(FILE* fptr, label* labels) {
     return counter;
 }
 
-int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of_labels) {
+int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of_labels,long int* dmem) {
     char line[MAX_LINE_LENGTH + 1];
     int counter = 0;
-
+    char* cleaned;
+    int mem_counter = 0;
+    int mem_addr = 0;
+    int mem_data = 0;
     while (!feof(fptr)) {
         if (!line) {
             printf("Memory allocation failed\n");
@@ -251,19 +284,46 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
         if (line_is_empty(line)) {
             continue;
         }
-        if (line_is_word(line)) {
+        else if (line_is_word(line)) {
+            cleaned = clean_line(line, 3);
+            char* token = strtok(line, "w");
+            token = strtok(NULL, " ");
+            token = strtok(NULL, " ");
+            mem_addr = handle_imm(token, labels, 0);
+            printf("mem_addr: %d\n", mem_addr);
+            token = strtok(NULL, " ");
+            mem_data = handle_imm(token, labels, 0);
+            printf("mem_data: %d\n", mem_data);
+            dmem[mem_addr] = mem_data;
+            mem_counter++;
             continue;
         }
-        if (line_is_label(line)) {
-            continue;
-        }
+        else if (line_is_label(line)) {
+            //check if it also contains a command. if it does, skip the label and get command
+
+            char* cmnt_idx = strchr(line, '#');
+            char* lbl_idx = strchr(line, ':');
+            char* dlr_idx = strchr(line, '$');
+            if (!dlr_idx) {
+                continue;
+            }
+            else{
+                if (cmnt_idx) {
+                    if (dlr_idx > cmnt_idx) {   //command is commented
+                        continue; 
+                    }
+                }
+                lbl_idx++;
+                cleaned = clean_line(lbl_idx, 2);
+            }
         
-        char* cleaned = clean_line(line,2);
-        printf("%s\n", cleaned);
+        }
+        else {
+            cleaned = clean_line(line, 2);
+        }
         
         char* line_opcode = strtok(cleaned, ",");
         instructions->opcode = get_opcode_num(line_opcode);
-        printf("Opcode: %012llX\n", (long long)instructions->opcode);
         char* line_rd = strtok(NULL, ",");
         instructions->rd = get_reg_num(line_rd);
         char* line_rs = strtok(NULL, ",");
@@ -287,16 +347,22 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
 }
 
 int main(int argc, char* argv[]) {
-    unsigned long long hex1 = 21, hex2 = 0xAf, hex3 = 0x521A, hex4 = 0x0F;
     int num_of_labels;
     int num_of_instructions;
-    printf("hex1: %012llX\nhex2 : %012llX\nhex3: %012llX\nhex4: %012llX\n", hex1, hex2, hex3, hex4);  //writes 12 hex symbols of a number
-
-    label labels[10];
+    
+    label labels[MAX_INSTRUCTIONS_MEM+1];
     instruction instructions[MAX_INSTRUCTIONS_MEM];
+
+    long int dmem[4096];
+    for (int i = 0; i < MAX_INSTRUCTIONS_MEM; i++) {
+
+        dmem[i] = 0;
+	}
+
 
     const char* asm_file_name = argv[1];
     printf("%s\n", asm_file_name);
+    // get asm_file_name without extension
 
     FILE* asm_file = fopen(asm_file_name, "r");
     if (!asm_file) {
@@ -311,33 +377,26 @@ int main(int argc, char* argv[]) {
         printf("Label Name: %s, Address: %03X\n", labels[i].label_name, labels[i].label_addr);
     }
     FILE* imemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\imemin.txt", "w");
-    num_of_instructions = second_pass(asm_file, instructions, labels, num_of_labels);
+    num_of_instructions = second_pass(asm_file, instructions, labels, num_of_labels, dmem);
+    fclose(asm_file);
     for (int i = 0; i < num_of_instructions; ++i) {
         fprintf(imemin_file, "%012llX\n",instructions[i].result);
     }
+    fclose(imemin_file);
 
-    fclose(asm_file);
-
-    //char input1[] = " out $zero, $zero, $imm2, $imm1, 1, 2 # enable irq2";
-    //char input2[] = "\t    sll $sp, $imm1, $imm2, $zero, 1, 11        # set $sp = 1 << 11 = 2048";
-    //char input3[] = "\t    out $zero, $imm1, $zero, $imm2, 6, L3        # set irqhandler as L3";
-
-    //char* cleaned1 = clean_line(input1,1);
-    //char* cleaned2 = clean_line(input2,1);
-    //char* cleaned3 = clean_line(input3,1);
-
-    //printf("Output 1: %s\n", cleaned1);
-    //printf("Output 2: %s\n", cleaned2);
-    //printf("Output 3: %s\n", cleaned3);
-
-    //char imm1[] = "0x1";
-    //char imm2[] = "0x1A3B";
-    //char imm3[] = "0xFf2E";
-    //char imm4[] = "0x4cD5";
-    //char imm5[] = "0xAb9C";
-    //char imm6[] = "0xE1Dd";
-    //char imm7[] = "fib";
+    int max_addr = 0;
+    for (int i = 4095; i > 0; i--) {
+		if (dmem[i] != 0) {
+			max_addr = i;
+			break;
+		}
+	}
+    FILE* dmemin_file = fopen("C:\\Users\\tomer\\source\\repos\\ComputerOrganization_ISA\\asm\\asm\\dmemin.txt", "w");
+	for (int i = 0; i < max_addr; i++) {
+		fprintf(dmemin_file, "%08X\n", dmem[i]);
+	}
 
 
     return 0;
 }
+

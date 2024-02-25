@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>fib.asm 123 abc</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\fib.asm</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

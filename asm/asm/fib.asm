@@ -5,16 +5,14 @@
   	jal $ra, $zero, $zero, $imm2, 0, fib		# calc $v0 = fib(x)
   	sw $zero, $zero, $imm2, $v0, 0, 65		# store fib(x) in 65
   	halt $zero, $zero, $zero, $zero, 0, 0		# halt
-  fib:
-  	add $sp, $sp, $imm2, $zero, 0, -3		# adjust stack for 3 items
+  fib:   add $sp, $sp, $imm2, $zero, 0, -3		# adjust stack for 3 items
   	sw $zero, $sp, $imm2, $s0, 0, 2			# save $s0
   	sw $zero, $sp, $imm2, $ra, 0, 1			# save return address
   	sw $zero, $sp, $imm2, $a0, 0, 0			# save argument
   	bgt $zero, $a0, $imm1, $imm2, 1, L1		# jump to L1 if x > 1
  	add $v0, $a0, $zero, $zero, 0, 0		# otherwise, fib(x) = x, copy input
   	beq $zero, $zero, $zero, $imm2, 0, L2		# jump to L2
-  L1:
-	 	sub $a0, $a0, $imm2, $zero, 0, 1		# calculate x - 1
+  L1:   sub $a0, $a0, $imm2, $zero, 0, 1		# calculate x - 1
   	jal $ra, $zero, $zero, $imm2, 0, fib		# calc $v0=fib(x-1)
   	add $s0, $v0, $imm2, $zero, 0, 0		# $s0 = fib(x-1)
   	lw $a0, $sp, $imm2, $zero, 0, 0			# restore $a0 = x
@@ -24,8 +22,7 @@
   	lw $a0, $sp, $imm2, $zero, 0, 0			# restore $a0
   	lw $ra, $sp, $imm2, $zero, 0, 1			# restore $ra
   	lw $s0, $sp, $imm2, $zero, 0, 2			# restore $s0
-  L2:
-  	add $sp, $sp, $imm2, $zero, 0, 3		# pop 3 items from stack
+  L2:   add $sp, $sp, $imm2, $zero, 0, 3		# pop 3 items from stack
   	add $t0, $a0, $zero, $zero, 0, 0		# $t0 = $a0
   	sll $t0, $t0, $imm2, $zero, 0, 16		# $t0 = $t0 << 16
   	add $t0, $t0, $v0, $zero, 0, 0			# $t0 = $t0 + $v0
@@ -43,4 +40,8 @@
   	out $zero, $zero, $imm2, $t1, 0, 20		# update address
   	out $zero, $zero, $imm2, $zero, 0, 5		# clear irq2 status
   	reti $zero, $zero, $zero, $zero, 0, 0		# return from interrupt
-  	.word 64 7
+  	  	.word     64 	  		7	#asdcsdc
+
+
+
+
