@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
 	output_files.display7seg = fopen(argv[11], "w");
 	output_files.diskout = fopen(argv[12], "w");
 	output_files.monitor_txt = fopen(argv[13], "w");
-	output_files.monitor_yuv = fopen(argv[14], "w");
+	output_files.monitor_yuv = fopen(argv[14], "wb");
 
 	// check all files have been opened successfully
 	if (check_output_files(&output_files) == 1) {
@@ -810,9 +810,15 @@ void create_monitor_files(FILE* monitor_txt, FILE* monitor_yuv, int* monitor_mat
 
 	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
 		fprintf(monitor_txt, "%02X\n", monitor_matrix[i]);
-		fprintf(monitor_yuv, "%02X\n", monitor_matrix[i]);
+
 		if (i == last_non_zero_line) {
 			break;
 		}
 	}
+
+	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
+		fprintf(monitor_yuv, "%c", monitor_matrix[i]);
+	}
+	
 }
+
