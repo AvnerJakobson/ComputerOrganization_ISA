@@ -3,14 +3,13 @@
 #define _CRT_SECURE_NO_DEPRECATE 
 #define MAX_MEMIN_LINE_SIZE			14			// max size of each line in memin.txt as defined in the project
 #define MAX_LINE_DEPTH				4096		// maximum line depth as defined in the project
-#define MAX_LINE_DEPTH_DISKIN 		16384		// maximum line depth of the disk as defined in the project
 #define REGISTER_NUM				16			// number of registers as defined in the project
 #define IO_REGISTER_NUM				23			// number of IO registers as defined in the project
 #define REGISTER_SIZE				32			// bits size for each register as defined in the project
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
-#define MAX_DISK_LINE_DEPTH			16384		// maximum line depth of the disk as defined in the project
-#define MAX_DISK_LINE_SIZE			10			// max size of each line in disk.txt as defined in the project
-#define DISK_SECTOR_SIZE			128			// size of each sector in the disk as defined in the project
+#define MAX_DISK_LINE_DEPTH			65536		// maximum line depth of the disk as defined in the project
+#define DISK_SECTOR_SIZE			512			// size of each sector in the disk as defined in the project
+#define DISK_SECTOR_NUM				128			// size of each sector in the disk as defined in the project
 #define PIXELS_IN_ROW_OR_COLUMN		256			// number of pixels in a row or column as defined in the project
 
 
@@ -20,21 +19,17 @@
 
 /////////////////////////////////////////// [TODO] /////////////////////////////////////////
 // Todos:
-//		Disk:
-// 		* Handle the diskin file
-//		* Handle the disk drive
-// 		* Handle the diskout file
 //		
 //		Interruptions:
-// 		* Handle irq1
-//		* When does the irq0status change back to zero?
+//		* When does the irq (0/1) status change back to zero?
 //		* Make sure that the algorithm for interrupts is ok. If 2 interrupts happen at the same time, what should happen to the status of the interrupt not handled?
-//		
-//		monitor:
-//		* Handle the monitor: both monitor_txt and monitor_yuv.
 //		
 //		Timer:
 //		* Check the implementation of the timer
+//
+//		General Todos:
+// 		* test the disk implementation
+//
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
@@ -95,9 +90,9 @@ Instruction decode_instruction(char* line);
 
 int power(int base, int exp);
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix);
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix, int* disk);
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix);
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix, int* disk, int* disk_process_completion_cycle);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
@@ -115,10 +110,11 @@ void print_display7seg(FILE* display7seg,unsigned int* clk, int display7seg_valu
 
 void increment_clks_IORegister(int* IORegisters);
 
-void increment_timer(int* IORegisters);
+void increment_timer_and_trigger_irq0(int* IORegisters);
 
 void create_monitor_files(FILE* monitor_txt, FILE* monitor_yuv, int* monitor_matrix);
 
+void create_diskout_file(FILE* diskout, int* disk);
 
 
 
@@ -149,21 +145,21 @@ int main(int argc, char* argv[]) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
-	memset(memory, 0, MAX_LINE_DEPTH * sizeof(memory));	
+	memset(memory, 0, MAX_LINE_DEPTH * sizeof(memory));	// init memory to zero
 	
 	int* disk = (int*)malloc(MAX_DISK_LINE_DEPTH * sizeof(disk));
 	if (disk == NULL) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
-	memset(disk, 0, MAX_DISK_LINE_DEPTH * sizeof(disk));
+	memset(disk, 0, MAX_DISK_LINE_DEPTH * sizeof(disk)); // init disk to zero
 
 	int* monitor_matrix = (int*)malloc( PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN * sizeof(monitor_matrix));
 	if (monitor_matrix == NULL) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
-	memset(monitor_matrix, 0, PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN * sizeof(monitor_matrix));
+	memset(monitor_matrix, 0, PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN * sizeof(monitor_matrix)); // init monitor_matrix to zero
 
 
 
@@ -205,16 +201,17 @@ int main(int argc, char* argv[]) {
 	dmemin_decode(input_files.dmemin, memory);
 
 	// TODO test when ready
-	// diskin_decode(input_files.diskin, disk);
+	diskin_decode(input_files.diskin, disk);
 
 
 	// start the simulation loop
-	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array, monitor_matrix);
+	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array, monitor_matrix, disk);
 
 	// end of execution of the instruction
 
-	// print the values of the display7seg to the display7seg file
 	// print the values of the contents of the disk drive to diskout file
+	create_diskout_file(output_files.diskout, disk);
+
 	// print the values of the monitor to the monitor_txt and monitor_yuv files
 	create_monitor_files(output_files.monitor_txt, output_files.monitor_yuv, monitor_matrix);
 	
@@ -314,10 +311,11 @@ void imemin_decode(FILE* imemin, Instruction* instructions){
 }
 
 void diskin_decode(FILE* diskin,int* disk){
-	// TODO: implement this function and test if the max line depth, max disk line size is correct
-	char line[MAX_DISK_LINE_SIZE]; 
+	char line[MAX_MEMIN_LINE_SIZE]; 
 	int line_number = 0;
-	while (fgets(line, MAX_DISK_LINE_SIZE, diskin) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
+	while (fgets(line, MAX_MEMIN_LINE_SIZE, diskin) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
+		int line_len = strlen(line);
+		line[line_len - 1] = '\0';
 		int disk_dec = hex2dec(line);
 		disk[line_number] = disk_dec;
 		line_number++;
@@ -338,7 +336,6 @@ int get_next_irq2(FILE* irq2in, int curr_irq2) {
 	}
 	return next_irq2; // Convert the line to an integer and return it.
 }
-
 
 int power(int base, int exp) {
 	if (exp == 0)
@@ -390,13 +387,15 @@ Instruction decode_instruction(char* line) {
 	return inst;
 }
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix){
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix, int* disk){
 	int next_pc = 0;
 	int exit = 0;
 	int next_irq2 = -1;
 	int irq = 0;
 	int IN_ISR = 0;
 	int* in_isr = &IN_ISR;
+	unsigned int DISK_PROCESS_COMPLETION_CYCLE = 0;
+	unsigned int* disk_process_completion_cycle = &DISK_PROCESS_COMPLETION_CYCLE;
 
 	printf("Info: Simulation loop started\n");
 
@@ -406,32 +405,44 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 
 	while (exit == 0){ //simulating
 
+
+		// ISR Handling
+
 		irq = (IORegisters[0] & IORegisters[3]) | (IORegisters[1] & IORegisters[4]) | (IORegisters[2] & IORegisters[5]);
 
-		if (irq == 1 && *in_isr == 0) {
+		if (irq == 1 && *in_isr == 0) { // if an interrupt is triggered and we are not in an ISR
 			*in_isr = 1;
 			IORegisters[7] = next_pc;
 			next_pc = IORegisters[6];
+		}
+
+		if (*clk == *disk_process_completion_cycle && *disk_process_completion_cycle != 0){ // irq1 is triggered when the disk process is completed
+			IORegisters[17] = 0; // disk is not busy anymore
+			IORegisters[14] = 0; // diskcmd marks the disk is not busy anymore
+			*disk_process_completion_cycle = 0; // reset the disk process completion cycle
+			IORegisters[4] = 1; // irq 1 is triggered to notify the disk process completion
+
 		}
 
 		if (*clk == next_irq2) {
 			IORegisters[5] = 1; // irq 2 is triggered
 			next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
 		}
-		else{
-			IORegisters[5] = 0; // irq 2 is not triggered
-		}
+
+
+
 
 		registers_array[0] = 0; // always 0
-		set_registers_imm1_imm2(instructions+ next_pc, registers_array);		
+		set_registers_imm1_imm2(instructions+ next_pc, registers_array);
+				
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// executing the current instruction instruction and get the next PC value for the next iteration
-		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr, monitor_matrix);
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr, monitor_matrix, disk, disk_process_completion_cycle);
 
 		*clk += 1;
 
-		increment_timer(IORegisters);
+		increment_timer_and_trigger_irq0(IORegisters);
 
 		increment_clks_IORegister(IORegisters);
 		if (next_pc == -1) { // HALT - exiting the simulator
@@ -469,7 +480,7 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 	registers_array[2] = full_imm2;
 }
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix){
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix, int* disk, int* disk_process_completion_cycle){
 	int next_pc = 0;
 
 	switch (inst.opcode)
@@ -655,45 +666,51 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		}
 
 		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm];
-
 		switch(registers_array[inst.rs] + registers_array[inst.rt])
 		{
-			case 8: //clks
+			case 8:{ //clks
 				*clk = registers_array[inst.rm];
 				break;
-			case 9: //leds
+			}
+
+			case 9:{ //leds
 				print_leds(output_files->leds, clk, registers_array[inst.rm]);
 				break;
-			case 10: //display7seg
+			}
+
+			case 10:{ //display7seg
+				// print the values of the display7seg to the display7seg file
 				print_display7seg(output_files->display7seg, clk, registers_array[inst.rm]);
 				break;
-			case 11: //timerenable
+			}
+
+			case 14:{ //diskcmd
+				if (IORegisters[17] == 0){ // if the disk is not busy
+					if (IORegisters[14] == 1){ // read
+						IORegisters[17] = 1; // disk is now busy
+						for (int i=0; i< DISK_SECTOR_SIZE; i++){
+							memory[registers_array[16] + i] = disk[registers_array[15]*DISK_SECTOR_SIZE + i]; // read the sector from the disk to the memory in the specified address
+						}
+						*disk_process_completion_cycle = *clk + 1024;
+					}
+					else if (IORegisters[14] == 2){ // write
+						IORegisters[17] = 1; // disk is now busy
+						for (int i=0; i< DISK_SECTOR_SIZE; i++){
+        					disk[registers_array[15]*DISK_SECTOR_SIZE + i] = memory[registers_array[16] + i]; // write the sector from the memory to the disk in the specified address
+						}
+ 						*disk_process_completion_cycle = *clk + 1024;
+					}
+				}
 				break;
-			case 12: //timercurrent
-				break;
-			case 13: //timermax
-				break;
-			case 14: //diskcmd
-				break;
-			case 15: //disksector
-				break;
-			case 16: //diskbuffer
-				break;
-			case 17: //diskstatus
-				break;
-			case 18: //reserved
-				break;
-			case 19: //reserved
-				break;
-			case 20: //monitoraddr
-				break;
-			case 21: //monitordata
-				break;
-			case 22: //monitorcmd
+			}
+
+			case 22:{ //monitorcmd
 				if (IORegisters[22] == 1)
 					monitor_matrix[IORegisters[20]]= IORegisters[21];
 						
 				break;
+			}
+
 		}
 		next_pc = curr_pc + 1;
 
@@ -771,10 +788,12 @@ void create_dmemout_file(FILE* dmemout, int* memory){
 		}
 	}
 
-	for (int i = 0; i < MAX_LINE_DEPTH; i++) {
-		fprintf(dmemout, "%08X\n", memory[i]);
-		if (i == last_non_zero_line) {
-			break;
+	if (last_non_zero_line != 0) {
+		for (int i = 0; i < MAX_LINE_DEPTH; i++) {
+			fprintf(dmemout, "%08X\n", memory[i]);
+			if (i == last_non_zero_line) {
+				break;
+			}
 		}
 	}
 }
@@ -786,7 +805,7 @@ void increment_clks_IORegister(int* IORegisters) {
 		IORegisters[8] ++;
 }
 
-void increment_timer(int* IORegisters) {
+void increment_timer_and_trigger_irq0(int* IORegisters) {
 	if (IORegisters[11]== 1)
 	{
 		if (IORegisters[12] >= IORegisters[13]){
@@ -808,17 +827,36 @@ void create_monitor_files(FILE* monitor_txt, FILE* monitor_yuv, int* monitor_mat
 		}
 	}
 
-	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
-		fprintf(monitor_txt, "%02X\n", monitor_matrix[i]);
+	if (last_non_zero_line != 0) {
+		for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
+			fprintf(monitor_txt, "%02X\n", monitor_matrix[i]); // Write up untill last non zero line
 
-		if (i == last_non_zero_line) {
-			break;
+			if (i == last_non_zero_line) {
+				break;
+			}
 		}
 	}
 
 	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
-		fprintf(monitor_yuv, "%c", monitor_matrix[i]);
+		fprintf(monitor_yuv, "%c", monitor_matrix[i]); // Write all the lines
 	}
 	
 }
 
+void create_diskout_file(FILE* diskout, int* disk){
+	int last_non_zero_line = 0;
+	for (int i = 0; i < MAX_DISK_LINE_DEPTH; i++) {
+		if (disk[i] != 0) {
+			last_non_zero_line = i;
+		}
+	}
+
+	if (last_non_zero_line != 0) {
+		for (int i = 0; i < MAX_DISK_LINE_DEPTH; i++) {
+			fprintf(diskout, "%08X\n", disk[i]);
+			if (i == last_non_zero_line) {
+				break;
+			}
+		}
+	}
+}
