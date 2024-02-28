@@ -10,6 +10,8 @@
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
 #define MAX_DISK_LINE_DEPTH			16384		// maximum line depth of the disk as defined in the project
 #define MAX_DISK_LINE_SIZE			10			// max size of each line in disk.txt as defined in the project
+#define DISK_SECTOR_SIZE			128			// size of each sector in the disk as defined in the project
+#define PIXELS_IN_ROW_OR_COLUMN		256			// number of pixels in a row or column as defined in the project
 
 
 #include <stdio.h>
@@ -93,9 +95,9 @@ Instruction decode_instruction(char* line);
 
 int power(int base, int exp);
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters);
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix);
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr);
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix);
 
 void set_registers_imm1_imm2(Instruction* inst, int* registers_array);
 
@@ -114,6 +116,8 @@ void print_display7seg(FILE* display7seg,unsigned int* clk, int display7seg_valu
 void increment_clks_IORegister(int* IORegisters);
 
 void increment_timer(int* IORegisters);
+
+void create_monitor_files(FILE* monitor_txt, FILE* monitor_yuv, int* monitor_matrix);
 
 
 
@@ -153,6 +157,13 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 	memset(disk, 0, MAX_DISK_LINE_DEPTH * sizeof(disk));
+
+	int* monitor_matrix = (int*)malloc( PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN * sizeof(monitor_matrix));
+	if (monitor_matrix == NULL) {
+		printf("Memory allocation failed\n");
+		exit(1);
+	}
+	memset(monitor_matrix, 0, PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN * sizeof(monitor_matrix));
 
 
 
@@ -198,13 +209,14 @@ int main(int argc, char* argv[]) {
 
 
 	// start the simulation loop
-	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array);
+	simulation_loop(instructions, memory, registers_array, clk, &input_files, &output_files, IO_registers_array, monitor_matrix);
 
 	// end of execution of the instruction
 
 	// print the values of the display7seg to the display7seg file
 	// print the values of the contents of the disk drive to diskout file
 	// print the values of the monitor to the monitor_txt and monitor_yuv files
+	create_monitor_files(output_files.monitor_txt, output_files.monitor_yuv, monitor_matrix);
 	
 	// print the values of the contents of the data memory to the dmemout file
 	create_dmemout_file(output_files.dmemout, memory);
@@ -219,6 +231,7 @@ int main(int argc, char* argv[]) {
 
 	free(memory);
 	free(disk);
+	free(monitor_matrix);
 	fclose(input_files.imemin);
 	fclose(input_files.dmemin);
 	fclose(input_files.diskin);
@@ -305,8 +318,6 @@ void diskin_decode(FILE* diskin,int* disk){
 	char line[MAX_DISK_LINE_SIZE]; 
 	int line_number = 0;
 	while (fgets(line, MAX_DISK_LINE_SIZE, diskin) != NULL && line_number < MAX_DISK_LINE_DEPTH) {
-		int line_len = strlen(line);
-		line[line_len - 1] = '\0';
 		int disk_dec = hex2dec(line);
 		disk[line_number] = disk_dec;
 		line_number++;
@@ -379,7 +390,7 @@ Instruction decode_instruction(char* line) {
 	return inst;
 }
 
-void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters){
+void simulation_loop(Instruction* instructions, int* memory, int* registers_array, unsigned int* clk, Input_files* input_files, Output_files* output_files, int* IORegisters, int* monitor_matrix){
 	int next_pc = 0;
 	int exit = 0;
 	int next_irq2 = -1;
@@ -416,7 +427,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		print_trace(output_files->trace, registers_array, next_pc, instructions[next_pc]);
 
 		// executing the current instruction instruction and get the next PC value for the next iteration
-		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr);
+		next_pc = simulate_current_instruction(instructions[next_pc], memory, registers_array, input_files, output_files, next_pc, clk, IORegisters, in_isr, monitor_matrix);
 
 		*clk += 1;
 
@@ -458,7 +469,7 @@ void set_registers_imm1_imm2(Instruction* inst, int* registers_array){
 	registers_array[2] = full_imm2;
 }
 
-int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr){
+int simulate_current_instruction(Instruction inst, int* memory,int* registers_array,Input_files* input_files,Output_files* output_files,int curr_pc, unsigned int* clk, int* IORegisters, int* in_isr, int* monitor_matrix){
 	int next_pc = 0;
 
 	switch (inst.opcode)
@@ -630,6 +641,10 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 			registers_array[inst.rd] = IORegisters[registers_array[inst.rs] + registers_array[inst.rt]];
 		print_hwregtrace(output_files->hwregtrace, 1, *clk, registers_array[inst.rs] + registers_array[inst.rt], IORegisters[registers_array[inst.rs]+ registers_array[inst.rt]]); 
 		next_pc = curr_pc + 1;
+		
+		if(registers_array[inst.rs] + registers_array[inst.rt] == 22) // Reading a command from the monitor
+			IORegisters[22] = 0; // After reading, return 0
+
 		break;
 	}
 	
@@ -675,6 +690,9 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 			case 21: //monitordata
 				break;
 			case 22: //monitorcmd
+				if (IORegisters[22] == 1)
+					monitor_matrix[IORegisters[20]]= IORegisters[21];
+						
 				break;
 		}
 		next_pc = curr_pc + 1;
@@ -771,7 +789,7 @@ void increment_clks_IORegister(int* IORegisters) {
 void increment_timer(int* IORegisters) {
 	if (IORegisters[11]== 1)
 	{
-		if (IORegisters[12] == IORegisters[13]){
+		if (IORegisters[12] >= IORegisters[13]){
 			IORegisters[3] = 1;
 			IORegisters[12] = 0;
 		}
@@ -779,5 +797,22 @@ void increment_timer(int* IORegisters) {
 			IORegisters[12] ++;
 			IORegisters[3] = 1; // [TODO] is this correct? should the irq change back to 0 after making sure that the ISR is called? (maybe it was called about irq2 and not irq0)
 
+	}
+}
+
+void create_monitor_files(FILE* monitor_txt, FILE* monitor_yuv, int* monitor_matrix){
+	int last_non_zero_line = 0;
+	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
+		if (monitor_matrix[i] != 0) {
+			last_non_zero_line = i;
+		}
+	}
+
+	for (int i = 0; i < PIXELS_IN_ROW_OR_COLUMN*PIXELS_IN_ROW_OR_COLUMN; i++) {
+		fprintf(monitor_txt, "%02X\n", monitor_matrix[i]);
+		fprintf(monitor_yuv, "%02X\n", monitor_matrix[i]);
+		if (i == last_non_zero_line) {
+			break;
+		}
 	}
 }
