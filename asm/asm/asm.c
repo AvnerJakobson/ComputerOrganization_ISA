@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (max_addr != 0) {
-        for (int i = 0; i < max_addr; i++) {
+        for (int i = 0; i < max_addr+1; i++) {
             fprintf(dmemin_file, "%08X\n", dmem[i]);
         }
     }
