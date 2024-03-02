@@ -1,4 +1,9 @@
  main:
+	add $sp, $sp, $imm2, $zero, 0, -4				# adjust stack for 4 items
+	sw $zero, $sp, $imm2, $s0, 0, 3					# save $s0
+	sw $zero, $sp, $imm2, $s1, 0, 2					# save $s1
+	sw $zero, $sp, $imm2, $s2, 0, 1					# save $s2
+	sw $zero, $sp, $immw, $a0 0, 0 					# save $a0
 	lw $a0, $imm1, $zero, $zero, 0x100, 0 			# load R
 	mac $a0, $a0, $a0, $zero, 0, 0 					# $a0 = R^2
 	out $zero, $zero, $imm1, $imm2, 21, 255 		# monitor data(IO21) = 255
@@ -32,4 +37,9 @@ plot:
 	beq $zero, $zero, $zero, $imm1, inner_loop, 0 	# return to inner loop
 	
 END:
+	lw $s0, $sp, $imm2, $zero, 0, 0					# restore $a0
+	lw $s2, $sp, $imm2, $zero, 0, 1					# restore $s2
+	lw $s1, $sp, $imm2, $zero, 0, 2					# restore $s1
+	lw $s0, $sp, $imm2, $zero, 0, 3					# restore $s0
+	add $sp, $sp, $imm2, $zero, 0, 4				# adjust stack pointer
 	halt $zero, $zero, $zero, $zero, 0, 0			# halt
