@@ -32,3 +32,4 @@ END:
 	lw $a0, $sp, $imm2, $zero, 0, 3 			# restore $a0
 	add $sp, $sp, $imm2, $zero, 0, 4			# adjust stack pointer
 	jal $t0, $zero, $zero, $ra, 0, 0 			# return to caller
+	halt $zero, $zero, $zero, $zero, 0, 0		# halt

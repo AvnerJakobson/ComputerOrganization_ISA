@@ -5,28 +5,31 @@
 	add $t0, $zero, $zero, $zero, 0, 0 				# x_counter = 0
 	add $t1, $zero, $zero, $zero, 0, 0 				# y_counter = 0
 
-
 outer_loop:
-	beq $zero, $zero, $zero, $imm2, 0, inner_loop 	# jump to inner loop
+	jal $ra, $zero, $zero, $imm2, 0, inner_loop 	# jump to inner loop
 	add $t1, $t1, $imm1, $zero, 1, 0 				# y++
 	add $t0, $zero, $zero, $zero, 0, 0 				# x_counter = 0
 	beq $zero, $zero, $zero, $imm2, 0, outer_loop 	# jump to outer_loop
 	
 inner_loop:
-	sub $t2, $t1, $imm1, $zero, 128, 0 				# y - y_center
+	sub $t2, $t1, $imm1, $zero, 128, 0 				# $t2 = y - y_center
 	mac $t2, $t2, $t2, $zero, 0, 0 					# $t2 = (y - y_center)^2
-	sub $s0, $t0, $imm1, $zero, 128, 0 				# $s0 = x - x-center
+	sub $s0, $t0, $imm1, $zero, 128, 0 				# $s0 = x - x_center
 	mac $s0, $s0, $s0, $zero, 0, 0 					# $s0 = (x - x-center)^2
 	add $t2, $t2, $s0, $zero, 0, 0 					# $t2 = (y - y_center)^2 + (x - x-center)^2
 	ble $zero, $t2, $a0, $imm1, plot, 0 			# if x-center^2 + y-center^2 <= R^2: plot
 	add $t0, $t0, $imm1, $zero, 1, 0 				# x++
-	# if x_counter == 255 and y_counter == 255 END
-	beq $zero, $t0, $imm1, outer_loop, 255, 0 		# else if x_counter == 255 outer loop
-	beq $zero, $zero, $zero, inner_loop, 0, 0 		# else return to inner_loop
+	add $s1, $t0, $t1, $zero, 0, 0 					# $s1 = x_counter + y_counter
+	beq $zero, $s1, $imm1, $imm2, 511, END 			# if x_counter == 256 and y_counter == 255 jump to END
+	beq $zero, $t0, $imm1, $ra, 256, 0 				# else if x_counter == 256 return to the line y++ in outer_loop
+	beq $zero, $zero, $zero, $imm1, inner_loop, 0 	# else return to inner_loop
 	
 plot:
-	# actual plot
-	beq $zero, $zero, $zero, inner_loop, 0, 0 		# return to inner loop
+	mac $s2, $t1, $imm1, $t0, 256, 0 				# $s2 = 256*y_counter + x_counter (pixel address)
+	out $zero, $imm1, $zero, $s2, 20, 0 			# give pixel address to monitor address register(20)
+	out $zero, $imm1, $zero, $imm2, 22, 1 			# set monitorcmd register(22) to 1
+	out $zero, $imm1, $zero, $imm2, 22, 0 			# set monitorcmd register(22) to 0
+	beq $zero, $zero, $zero, $imm1, inner_loop, 0 	# return to inner loop
 	
 END:
-	
+	halt $zero, $zero, $zero, $zero, 0, 0			# halt
