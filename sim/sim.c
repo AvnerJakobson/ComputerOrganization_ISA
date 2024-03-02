@@ -178,14 +178,14 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Open the output files and store them in the output_files struct
-	output_files.dmemout = fopen(argv[5], "w");
-	output_files.regout = fopen(argv[6], "w");
-	output_files.trace = fopen(argv[7], "w");
-	output_files.hwregtrace = fopen(argv[8], "w");
-	output_files.cycles = fopen(argv[9], "w");
-	output_files.leds = fopen(argv[10], "w");
+	output_files.dmemout     = fopen(argv[5], "w");
+	output_files.regout      = fopen(argv[6], "w");
+	output_files.trace       = fopen(argv[7], "w");
+	output_files.hwregtrace  = fopen(argv[8], "w");
+	output_files.cycles      = fopen(argv[9], "w");
+	output_files.leds        = fopen(argv[10], "w");
 	output_files.display7seg = fopen(argv[11], "w");
-	output_files.diskout = fopen(argv[12], "w");
+	output_files.diskout     = fopen(argv[12], "w");
 	output_files.monitor_txt = fopen(argv[13], "w");
 	output_files.monitor_yuv = fopen(argv[14], "wb");
 
