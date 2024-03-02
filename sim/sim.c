@@ -28,7 +28,8 @@
 //		* Check the implementation of the timer
 //
 //		General Todos:
-// 		* test the disk implementation
+// 		* Test the disk implementation
+//		* What happens if one of the input files are missing?
 //
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
@@ -200,7 +201,6 @@ int main(int argc, char* argv[]) {
 	
 	dmemin_decode(input_files.dmemin, memory);
 
-	// TODO test when ready
 	diskin_decode(input_files.diskin, disk);
 
 
@@ -398,7 +398,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 	unsigned int* disk_process_completion_cycle = &DISK_PROCESS_COMPLETION_CYCLE;
 
 	printf("Info: Simulation loop started\n");
-
+	
 	
 	// Check for inital value of next_irq2
 	next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
@@ -428,7 +428,6 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 			IORegisters[5] = 1; // irq 2 is triggered
 			next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
 		}
-
 
 
 
