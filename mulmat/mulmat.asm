@@ -46,4 +46,4 @@ END:
 	lw $s1, $sp, $imm2, $zero, 0, 1					# restore $s1
 	lw $s0, $sp, $imm2, $zero, 0, 2					# restore $s0
 	add $sp, $sp, $imm2, $zero, 0, 3				# adjust stack pointer
-	halt $zero, $zero, $zero, $zero, 0, 0		# halt
+	halt $zero, $zero, $zero, $zero, 0, 0			# halt
