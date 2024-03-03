@@ -30,7 +30,7 @@
 //		General Todos:
 // 		* Test the disk implementation
 //		* What happens if one of the input files are missing?
-//
+//		* Should we wait for the disk_cycle_completion to be 0 before reading or writing? 
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
@@ -127,8 +127,6 @@ int main(int argc, char* argv[]) {
 
 	unsigned int CLK = 0;
 	unsigned int* clk = &CLK;
-	printf("Initial value of clock: %u\n", *clk);
-	
 	unsigned int PC = 0;
 	unsigned int* pc = &PC;
 
@@ -224,11 +222,14 @@ int main(int argc, char* argv[]) {
 	// print the number of cycles to the cycles file
 	create_cycles_file(output_files.cycles, clk);
 	
-	// Free allocations and close all files
+
+	// Free allocations
 
 	free(memory);
 	free(disk);
 	free(monitor_matrix);
+
+	// Close all files
 	fclose(input_files.imemin);
 	fclose(input_files.dmemin);
 	fclose(input_files.diskin);
@@ -244,6 +245,7 @@ int main(int argc, char* argv[]) {
 	fclose(output_files.monitor_txt);
 	fclose(output_files.monitor_yuv);
 	printf("Info: SIMULATOR FINISHED\n");
+
 	return 0;
 }
 
@@ -397,7 +399,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 	unsigned int DISK_PROCESS_COMPLETION_CYCLE = 0;
 	unsigned int* disk_process_completion_cycle = &DISK_PROCESS_COMPLETION_CYCLE;
 
-	printf("Info: Simulation loop started\n");
+	printf("Info: Simulation loop STARTED\n");
 	
 	
 	// Check for inital value of next_irq2
@@ -808,7 +810,7 @@ void increment_timer_and_trigger_irq0(int* IORegisters) {
 		}
 		else
 			IORegisters[12] ++;
-			IORegisters[3] = 1; // [TODO] is this correct? should the irq change back to 0 after making sure that the ISR is called? (maybe it was called about irq2 and not irq0)
+			IORegisters[3] = 1;
 
 	}
 }
