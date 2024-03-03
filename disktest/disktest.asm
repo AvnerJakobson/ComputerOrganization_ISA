@@ -1,19 +1,22 @@
 main:
-	# set irq0enable to 1
+	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
 	# set irq1enable to 1
 	# $t0 = 8, holds the disksector 
 	# $t1 = 0, holds the diskbuffer
+	# irqhandler PC = ISR
 
 loop:
 	# check if diskstatus = 0
+	# if not jump to wait_for_disk
 	# diskcmd = 1, read
-	# wait for diskstatus = 0?
+	# jump to wait for diskstatus = 0?
 	# 
 	# diskcmd = 2, write to disksector + 1
 	add $t0, $t0, $imm1, $zero, -1, 0 				# disksector-- 
 	# if $t0 < 0, jump to END
 
-
+wait_for_disk:
+	
 
 ISR:
 	add $sp, $sp, $imm2, $zero, 0, -3				# adjust stack for 3 items
@@ -37,3 +40,9 @@ END:
 	lw $s0, $sp, $imm2, $zero, 0, 2					# restore $s0
 	add $sp, $sp, $imm2, $zero, 0, 3				# adjust stack pointer
 	halt $zero, $zero, $zero, $zero, 0, 0			# halt
+
+
+
+	# TODO:
+	# should we write ISR 2 routine for every asm
+	# fix $sp for every program

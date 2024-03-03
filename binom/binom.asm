@@ -1,7 +1,11 @@
 main:
 	lw $a0, $imm1, $zero, $zero, 0x100, 0 		# load n
 	lw $a1, $imm1, $zero, $zero, 0x101, 0 		# load k
+	add $sp, $zero, $imm2, $zero, 0, 2000		# set stack at 2000
 	add $v0, $imm1, $zero, $zero, 0, 0 			# set v0 to 0
+	jal $ra, $zero, $zero, $imm1, binom, 0	 	# binom(n, k)
+	sw $v0, $zero, $imm2, $zero, 0, 0X102 		# save result to 0x102, uppercase hexa number for debug
+	halt $zero, $zero, $zero, $zero, 0, 0		# halt
 	
 binom:
 	beq $zero, $a0, $zero, $imm1, return_one, 0 # if n == 0, return_one
@@ -25,11 +29,9 @@ return_one:
 	jal $t0, $zero, $zero, $imm1, END, 0 		# jump to END
 
 END:
-	sw $v0, $zero, $imm2, $zero, 0, 0X102 		# save result to 0x102, uppercase hexa number for debug
 	lw $s0, $sp, $imm2, $zero, 0, 0				# restore $s0
 	lw $ra, $sp, $imm2, $zero, 0, 1				# restore $ra
 	lw $a1, $sp, $imm2, $zero, 0, 2				# restore $a1
 	lw $a0, $sp, $imm2, $zero, 0, 3 			# restore $a0
 	add $sp, $sp, $imm2, $zero, 0, 4			# adjust stack pointer
 	jal $t0, $zero, $zero, $ra, 0, 0 			# return to caller
-	halt $zero, $zero, $zero, $zero, 0, 0		# halt

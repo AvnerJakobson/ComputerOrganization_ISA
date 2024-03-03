@@ -1,4 +1,5 @@
 main:
+	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
 	add $sp, $sp, $imm2, $zero, 0, -3				# adjust stack for 3 items
 	sw $zero, $sp, $imm2, $s0, 0, 2					# save $s0
 	sw $zero, $sp, $imm2, $s1, 0, 1					# save $s1
