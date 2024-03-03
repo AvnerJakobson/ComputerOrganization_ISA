@@ -667,11 +667,6 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 		IORegisters[registers_array[inst.rs] + registers_array[inst.rt]] = registers_array[inst.rm];
 		switch(registers_array[inst.rs] + registers_array[inst.rt])
 		{
-			case 8:{ //clks
-				*clk = registers_array[inst.rm];
-				break;
-			}
-
 			case 9:{ //leds
 				print_leds(output_files->leds, clk, registers_array[inst.rm]);
 				break;
