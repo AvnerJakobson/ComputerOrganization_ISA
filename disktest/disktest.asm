@@ -1,48 +1,30 @@
 main:
-	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
-	# set irq1enable to 1
-	# $t0 = 8, holds the disksector 
-	# $t1 = 0, holds the diskbuffer
-	# irqhandler PC = ISR
+	add $sp, $zero, $imm2, $zero, 0, 2000				# set stack at 2000
+	out $zero, $imm1, $zero, $imm2, 6, ISR				# irqhandler PC = ISR
+	out $zero, $imm1, $zero, $imm2, 1, 1 				# set irq1enable to 1
+	out $zero, $imm1, $zero, $imm2, 15, 7 				# disksector = 7
+	out $zero, $imm1, $zero, $imm2, 12, 500 			# diskbuffer = 500
 
 loop:
-	# check if diskstatus = 0
-	# if not jump to wait_for_disk
-	# diskcmd = 1, read
-	# jump to wait for diskstatus = 0?
-	# 
-	# diskcmd = 2, write to disksector + 1
-	add $t0, $t0, $imm1, $zero, -1, 0 				# disksector-- 
-	# if $t0 < 0, jump to END
+	jal $ra, $zero, $zero, $imm1, wait_for_disk, 0 		# wait_for_disk to be free
+	out $zero, $imm1, $zero, $imm2, 14, 1				# diskcmd = 1, read
+	in $t0, $imm1, $zero, $zero, 15, 0 					# $t0 = disk sector
+	add $t0, $t0, $imm1, $zero, 1, 0 					# t0 ++
+	jal $ra, $zero, $zero, $imm1, wait_for_disk, 0 		# wait_for_disk to be free
+	out $zero, $imm1, $zero, $imm2, 14, 1 				# diskcmd = 2, write to disksector + 1
+	add $t0, $t0, $imm1, $zero, -2, 0 					# t0 -= 2 
+	blt $zero, $t0, $imm1, $imm2, 0, END				# if $t0 < 0, jump to END
+	out $zero, $imm1, $zero, $t0, 15, 0 				# disksector = $t0
 
 wait_for_disk:
-	
+	in $t1, $imm1, $zero, $zero, 17, 0 					# $t1 = diskstatus
+	beq $zero, $t1, $imm1, $ra, 0, 0 					# if diskstatus == 0, return to the loop thru $ra
+	beq $zero, $zero, $zero, $imm1, wait_for_disk, 0 	# jump to wait_for_disk
 
 ISR:
-	add $sp, $sp, $imm2, $zero, 0, -3				# adjust stack for 3 items
-	sw $zero, $sp, $imm2, $s0, 0, 2					# save $s0
-	sw $zero, $sp, $imm2, $s1, 0, 1					# save $s1
-	sw $zero, $sp, $imm2, $s2, 0, 0					# save $s2
-	# load irq0
-	# check if irq0 == 1
-	# load irq1
+	out $zero, $imm1, $zero, $imm2, 17, 0 				# set diskstatus to 0
+	out $zero, $imm1, $zero, $imm2, 4, 0 				# set irq1status(IO4) to 0
+	reti $zero, $zero, $zero, $zero, 0, 0				# return from interrupt
 	
-	# if diskcmd == 1
-	# else if diskcmd == 2
-	# else
-	# 
-	# reti
-	
-
 END:
-	lw $s2, $sp, $imm2, $zero, 0, 0					# restore $s2
-	lw $s1, $sp, $imm2, $zero, 0, 1					# restore $s1
-	lw $s0, $sp, $imm2, $zero, 0, 2					# restore $s0
-	add $sp, $sp, $imm2, $zero, 0, 3				# adjust stack pointer
-	halt $zero, $zero, $zero, $zero, 0, 0			# halt
-
-
-
-	# TODO:
-	# should we write ISR 2 routine for every asm
-	# fix $sp for every program
+	halt $zero, $zero, $zero, $zero, 0, 0				# halt
