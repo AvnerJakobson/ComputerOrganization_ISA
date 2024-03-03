@@ -20,17 +20,11 @@
 /////////////////////////////////////////// [TODO] /////////////////////////////////////////
 // Todos:
 //		
-//		Interruptions:
-//		* When does the irq (0/1) status change back to zero?
-//		* Make sure that the algorithm for interrupts is ok. If 2 interrupts happen at the same time, what should happen to the status of the interrupt not handled?
-//		
 //		Timer:
 //		* Check the implementation of the timer
 //
 //		General Todos:
 // 		* Test the disk implementation
-//		* What happens if one of the input files are missing?
-//		* Should we wait for the disk_cycle_completion to be 0 before reading or writing? 
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
@@ -429,6 +423,9 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 		if (*clk == next_irq2) {
 			IORegisters[5] = 1; // irq 2 is triggered
 			next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
+		}
+		else {
+			IORegisters[5] = 0; // irq 2 is not triggered
 		}
 
 
