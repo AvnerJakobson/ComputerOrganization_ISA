@@ -7,9 +7,9 @@
 #define IO_REGISTER_NUM				23			// number of IO registers as defined in the project
 #define REGISTER_SIZE				32			// bits size for each register as defined in the project
 #define MAX_POSITIVE_IMM_VALUE		2047		// maximun positive value when using 3 hex digits
-#define MAX_DISK_LINE_DEPTH			65536		// maximum line depth of the disk as defined in the project
-#define DISK_SECTOR_SIZE			512			// size of each sector in the disk as defined in the project
-#define DISK_SECTOR_NUM				128			// size of each sector in the disk as defined in the project
+#define MAX_DISK_LINE_DEPTH			16384		// maximum line depth of the disk as defined in the project
+#define DISK_SECTOR_SIZE			128			// size of each sector in the disk as defined in the project
+#define DISK_SECTOR_NUM				128			// number of sectors in the disk as defined in the project
 #define PIXELS_IN_ROW_OR_COLUMN		256			// number of pixels in a row or column as defined in the project
 
 
@@ -400,6 +400,10 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 	next_irq2 = get_next_irq2(input_files->irq2in, next_irq2);
 
 	while (exit == 0){ //simulating
+
+		if (*clk == 100000){
+			printf("AHHHH???? \n");
+		}
 
 
 		// ISR Handling
