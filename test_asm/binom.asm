@@ -1,6 +1,6 @@
 init_args_in_mem:
-	.word 100 10 								# set n
-	.word 101 5 					 			# set k
+	.word 0x100 10 								# set n
+	.word 0x101 5 					 			# set k
 
 main:
 	lw $a0, $imm1, $zero, $zero, 0x100, 0 		# load n
