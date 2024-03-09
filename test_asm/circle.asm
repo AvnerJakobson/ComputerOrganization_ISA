@@ -26,6 +26,7 @@ inner_loop:
 	mac $s0, $s0, $s0, $zero, 0, 0 					# $s0 = (x - x-center)^2
 	add $t2, $t2, $s0, $zero, 0, 0 					# $t2 = (y - y_center)^2 + (x - x-center)^2
 	ble $zero, $t2, $a0, $imm1, plot, 0 			# if x-center^2 + y-center^2 <= R^2: plot
+after_plot: 
 	add $t0, $t0, $imm1, $zero, 1, 0 				# x++
 	add $s1, $t0, $t1, $zero, 0, 0 					# $s1 = x_counter + y_counter
 	beq $zero, $s1, $imm1, $imm2, 510, END 			# if x_counter == 255 and y_counter == 255 jump to END
@@ -37,7 +38,7 @@ plot:
 	out $zero, $imm1, $zero, $s2, 20, 0 			# give pixel address to monitor address register(20)
 	out $zero, $imm1, $zero, $imm2, 22, 1 			# set monitorcmd register(22) to 1
 	out $zero, $imm1, $zero, $imm2, 22, 0 			# set monitorcmd register(22) to 0
-	beq $zero, $zero, $zero, $imm1, inner_loop, 0 	# return to inner loop
+	beq $zero, $zero, $zero, $imm1, after_plot, 0 	# return to inner loop
 	
 END:
 	lw $s0, $sp, $imm2, $zero, 0, 0					# restore $a0
