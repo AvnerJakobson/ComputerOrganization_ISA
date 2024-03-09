@@ -70,6 +70,7 @@ mult_vec:
 	lw $t0, $a0, $zero, $zero, 0, 0					# load first elem
 	lw $t1, $a1, $zero, $zero, 0, 0					# load second elem
 	mac $v0, $t0, $t1, $zero, 0, 0 					# multiply elems
+
 inner_loop:
 	add $t2, $t2, $imm2, $zero, 0, 1  				# increment counter by 1 
 	lw $t0, $a0, $imm1, $zero, 1, 0  				# increment a0 by 1 and load

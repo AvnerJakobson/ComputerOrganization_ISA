@@ -29,7 +29,7 @@ binom:
 	jal $zero, $zero, $zero, $imm1, END, 0 		# jump to END, writes address to $zero for debug testing
 	
 return_one:
-	add $v0, $imm1, $zero, $zero, 0, 0 			# v0 = 1
+	add $v0, $imm1, $zero, $zero, 1, 0 			# v0 = 1
 	jal $t0, $zero, $zero, $imm1, END, 0 		# jump to END
 
 END:
