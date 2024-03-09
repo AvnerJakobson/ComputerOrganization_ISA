@@ -10,8 +10,9 @@ loop:
 	out $zero, $imm1, $zero, $imm2, 14, 1				# diskcmd = 1, read
 	in $t0, $imm1, $zero, $zero, 15, 0 					# $t0 = disk sector
 	add $t0, $t0, $imm1, $zero, 1, 0 					# t0 ++
+	out $zero, $imm1, $zero, $t0, 15, 0 				# disksector = $t0
 	jal $ra, $zero, $zero, $imm1, wait_for_disk, 0 		# wait_for_disk to be free
-	out $zero, $imm1, $zero, $imm2, 14, 1 				# diskcmd = 2, write to disksector + 1
+	out $zero, $imm1, $zero, $imm2, 14, 2 				# diskcmd = 2, write to disksector + 1
 	jal $ra, $zero, $zero, $imm1, wait_for_disk, 0 		# wait_for_disk to be free
 	add $t0, $t0, $imm1, $zero, -2, 0 					# t0 -= 2 
 	blt $zero, $t0, $imm1, $imm2, 0, END				# if $t0 < 0, jump to END
