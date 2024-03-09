@@ -1,3 +1,39 @@
+init_mat_1:
+	.word 0x100 1 									# set a(0, 0)
+	.word 0x101 0					 				# set a(0, 1)
+	.word 0x102 0 									# set a(0, 2)
+	.word 0x103 0					 				# set a(0, 3)
+	.word 0x104 0 									# set a(1, 0)
+	.word 0x105 1 					 				# set a(1, 1)
+	.word 0x106 0 									# set a(1, 2)
+	.word 0x107 0					 				# set a(1, 3)
+	.word 0x108 0 									# set a(2, 0)
+	.word 0x109 0					 				# set a(2, 1)
+	.word 0x10A 1 									# set a(2, 2)
+	.word 0x10B 0					 				# set a(2, 3)
+	.word 0x10C 0 									# set a(3, 0)
+	.word 0x10D 0					 				# set a(3, 1)
+	.word 0x10E 0 									# set a(3, 2)
+	.word 0x10F 1					 				# set a(3, 3)
+	
+init_mat_2:
+	.word 0x110 10 									# set b(0, 0)
+	.word 0x111 5 					 				# set b(0, 1)
+	.word 0x112 10 									# set b(0, 2)
+	.word 0x113 5 					 				# set b(0, 3)
+	.word 0x114 10 									# set b(1, 0)
+	.word 0x115 5 						 			# set b(1, 1)
+	.word 0x116 10 									# set b(1, 2)
+	.word 0x117 5 						 			# set b(1, 3)
+	.word 0x118 10 									# set b(2, 0)
+	.word 0x119 5 						 			# set b(2, 1)
+	.word 0x11A 10 									# set b(2, 2)
+	.word 0x11B 5 						 			# set b(2, 3)
+	.word 0x11C 10 									# set b(3, 0)
+	.word 0x11D 5 						 			# set b(3, 1)
+	.word 0x11E 10 									# set b(3, 2)
+	.word 0x11F 5 						 			# set b(3, 3)
+
 main:
 	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
 	add $sp, $sp, $imm2, $zero, 0, -3				# adjust stack for 3 items
