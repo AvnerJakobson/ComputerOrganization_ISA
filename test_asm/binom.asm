@@ -12,13 +12,13 @@ main:
 	halt $zero, $zero, $zero, $zero, 0, 0		# halt
 	
 binom:
-	beq $zero, $a0, $zero, $imm1, return_one, 0 # if n == 0, return_one
-	beq $zero, $a0, $a1, $imm1, return_one, 0 	# if n == k, return_one
 	add $sp, $sp, $imm2, $zero, 0, -4			# adjust stack for 4 items
 	sw $zero, $sp, $imm2, $a0, 0, 3				# save $a0
 	sw $zero, $sp, $imm2, $a1, 0, 2 			# save $a1
 	sw $zero, $sp, $imm2, $ra, 0, 1				# save return address
 	sw $zero, $sp, $imm2, $s0, 0, 0 			# save $s0
+	beq $zero, $a0, $zero, $imm1, return_one, 0 # if n == 0, return_one
+	beq $zero, $a0, $a1, $imm1, return_one, 0 	# if n == k, return_one
 	add $a0, $a0, $imm1, $zero, -1, 0 			# else, set n = n-1
 	jal $ra, $zero, $zero, $imm1, binom, 0	 	# binom(n-1, k)
 	add $s0, $v0, $zero, $zero, 0, 0 			# save recursion result to $s0
