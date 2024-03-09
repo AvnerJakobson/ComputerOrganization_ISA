@@ -46,7 +46,7 @@ int line_is_label(char* line) {
 
 int line_is_empty(char* line) {
     while (*line != '\0') {
-        if (!isspace((unsigned char)*line) && *line != '#') {
+        if (!isblank((unsigned char)*line) && *line != '#') {
             return 0; // Line is not empty
         }
         line++;
@@ -55,7 +55,10 @@ int line_is_empty(char* line) {
 }
 
 int line_is_word(char* line) {
-    return (strstr(line, ".word") == NULL) ? 0 : 1;
+    
+    int r= (strstr(line, ".word") == NULL) ? 0 : 1;
+    
+    return r;
 }
 
 
@@ -238,6 +241,8 @@ int first_pass(FILE* fptr, label* labels) {
             exit(1);
         }
         fgets(line, sizeof(line), fptr);
+        printf("Line |%s|\n", line);
+
         if (line_is_empty(line)) {
             continue;
         }
@@ -269,7 +274,6 @@ int first_pass(FILE* fptr, label* labels) {
 }
 
 int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of_labels,long int* dmem) {
-    char line[MAX_LINE_LENGTH + 1];
     int counter = 0;
     char* cleaned;
     int mem_counter = 0;
@@ -277,12 +281,14 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
     int mem_data = 0;
     int line_cnt = 1;
     while (!feof(fptr)) {
-        printf("Line %d ", line_cnt++);
+        char line[MAX_LINE_LENGTH + 1] = {0};
+
         if (!line) {
             printf("Memory allocation failed\n");
             exit(1);
         }
         fgets(line, sizeof(line), fptr);
+        printf("Line |%s|\n", line);
         if (line_is_empty(line)) {
             continue;
         }
@@ -322,6 +328,7 @@ int second_pass(FILE* fptr, instruction* instructions, label* labels, int num_of
         }
         else {
             cleaned = clean_line(line, 2);
+            printf("Cleaned: %s\n", cleaned);
         }
         
         char* line_opcode = strtok(cleaned, ",");
@@ -411,7 +418,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (max_addr != 0) {
-        for (int i = 0; i < max_addr; i++) {
+        for (int i = 0; i < max_addr+1; i++) {
             fprintf(dmemin_file, "%08X\n", dmem[i]);
         }
     }

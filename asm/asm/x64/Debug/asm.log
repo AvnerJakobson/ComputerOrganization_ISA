@@ -1,9 +1,9 @@
 ﻿  asm.c
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(132,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[500]'
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(166,22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(201,16): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(204,35): warning C4020: 'atoi': too many actual parameters
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(205,16): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(232,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[51]'
-C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(184): warning C4715: 'clean_line': not all control paths return a value
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(135,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[500]'
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(169,22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(204,16): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(207,35): warning C4020: 'atoi': too many actual parameters
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(208,16): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(235,11): warning C4047: 'initializing': 'char *' differs in levels of indirection from 'char (*)[51]'
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\asm\asm.c(187): warning C4715: 'clean_line': not all control paths return a value
   asm.vcxproj -> C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\x64\Debug\asm.exe

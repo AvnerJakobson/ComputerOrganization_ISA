@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>C:\Users\tomer\source\repos\ComputerOrganization_ISA\mulmat\mulmat.txt C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\im_mulmat.txt C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm\dm_mulmat.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>C:\Users\tomer\source\repos\ComputerOrganization_ISA\fibexample_MOODLE\fib.asm C:\Users\tomer\source\repos\ComputerOrganization_ISA\test_files\fib\imemin.txt C:\Users\tomer\source\repos\ComputerOrganization_ISA\test_files\fib\dmemin.txt</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
