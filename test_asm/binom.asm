@@ -1,6 +1,6 @@
 init_args_in_mem:
-	.word 0x100 10 								# set n
-	.word 0x101 5 					 			# set k
+	.word 0x100 1 								# set n
+	.word 0x101 1 					 			# set k
 
 main:
 	lw $a0, $imm1, $zero, $zero, 0x100, 0 		# load n
@@ -18,7 +18,7 @@ binom:
 	sw $zero, $sp, $imm2, $a0, 0, 3				# save $a0
 	sw $zero, $sp, $imm2, $a1, 0, 2 			# save $a1
 	sw $zero, $sp, $imm2, $ra, 0, 1				# save return address
-	sw $zero, $sp, $imm2, $s0, 0, 0 				# save $s0
+	sw $zero, $sp, $imm2, $s0, 0, 0 			# save $s0
 	add $a0, $a0, $imm1, $zero, -1, 0 			# else, set n = n-1
 	jal $ra, $zero, $zero, $imm1, binom, 0	 	# binom(n-1, k)
 	add $s0, $v0, $zero, $zero, 0, 0 			# save recursion result to $s0
