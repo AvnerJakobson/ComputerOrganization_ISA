@@ -246,6 +246,9 @@ int first_pass(FILE* fptr, label* labels) {
         if (line_is_empty(line)) {
             continue;
         }
+        if (line_is_word(line)) {
+        	continue;
+        }
         if (line_is_label(line)) {
             char* dlr_idx = strchr(line, '$');
             char* cmnt_idx = strchr(line, '#');
