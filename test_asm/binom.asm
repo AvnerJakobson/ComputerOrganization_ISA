@@ -24,7 +24,7 @@ binom:
 	add $s0, $v0, $zero, $zero, 0, 0 			# save recursion result to $s0
 	lw $a0, $sp, $imm1, $imm2, 3, -1 			# load n-1
 	lw $a1, $sp, $imm1, $imm2, 2, -1 			# load k-1
-	jal $ra, $zero, $imm1, binom, 0	 			# binom(n-1, k-1)
+	jal $ra, $zero, $zero, $imm1, binom, 0	 	# binom(n-1, k-1)
 	add $v0, $v0, $s0, $zero, 0, 0 				# sum recursion results
 	jal $zero, $zero, $zero, $imm1, END, 0 		# jump to END, writes address to $zero for debug testing
 	
