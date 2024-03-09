@@ -3,7 +3,7 @@ main:
 	out $zero, $imm1, $zero, $imm2, 6, ISR				# irqhandler PC = ISR
 	out $zero, $imm1, $zero, $imm2, 1, 1 				# set irq1enable to 1
 	out $zero, $imm1, $zero, $imm2, 15, 7 				# disksector = 7
-	out $zero, $imm1, $zero, $imm2, 12, 500 			# diskbuffer = 500
+	out $zero, $imm1, $zero, $imm2, 16, 500 			# diskbuffer = 500
 
 loop:
 	jal $ra, $zero, $zero, $imm1, wait_for_disk, 0 		# wait_for_disk to be free
