@@ -45,7 +45,7 @@ int line_is_label(char* line) {
 }
 
 int line_is_empty(char* line) {
-    while (*line != '\0') {
+    while (*line != '\0' && *line!='\n') {
         if (!isblank((unsigned char)*line) && *line != '#') {
             return 0; // Line is not empty
         }
