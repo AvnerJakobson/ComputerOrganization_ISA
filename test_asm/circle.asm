@@ -1,4 +1,4 @@
- .word 0x100 5
+ .word 0x100 10
  
  main:
  	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
@@ -38,7 +38,7 @@ plot:
 	out $zero, $imm1, $zero, $s2, 20, 0 			# give pixel address to monitor address register(20)
 	out $zero, $imm1, $zero, $imm2, 22, 1 			# set monitorcmd register(22) to 1
 	out $zero, $imm1, $zero, $imm2, 22, 0 			# set monitorcmd register(22) to 0
-	beq $zero, $zero, $zero, $imm1, after_plot, 0 	# return to inner loop
+	beq $zero, $zero, $zero, $imm1, after_plot, 0 	# return to after_plot
 	
 END:
 	lw $s0, $sp, $imm2, $zero, 0, 0					# restore $a0
