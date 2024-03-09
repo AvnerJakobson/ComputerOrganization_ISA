@@ -1,3 +1,5 @@
+ .word 0x100 5
+ 
  main:
  	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
 	add $sp, $sp, $imm2, $zero, 0, -4				# adjust stack for 4 items
