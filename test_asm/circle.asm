@@ -1,4 +1,4 @@
- .word 0x100 10
+ .word 0x100 100
  
  main:
  	add $sp, $zero, $imm2, $zero, 0, 2000			# set stack at 2000
