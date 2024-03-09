@@ -4,7 +4,7 @@
 	sw $zero, $sp, $imm2, $s0, 0, 3					# save $s0
 	sw $zero, $sp, $imm2, $s1, 0, 2					# save $s1
 	sw $zero, $sp, $imm2, $s2, 0, 1					# save $s2
-	sw $zero, $sp, $imm2, $a0 0, 0 					# save $a0
+	sw $zero, $sp, $imm2, $a0, 0, 0 				# save $a0
 	lw $a0, $imm1, $zero, $zero, 0x100, 0 			# load R
 	mac $a0, $a0, $a0, $zero, 0, 0 					# $a0 = R^2
 	out $zero, $zero, $imm1, $imm2, 21, 255 		# monitor data(IO21) = 255
