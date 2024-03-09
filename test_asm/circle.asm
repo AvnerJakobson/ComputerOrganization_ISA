@@ -26,8 +26,8 @@ inner_loop:
 	ble $zero, $t2, $a0, $imm1, plot, 0 			# if x-center^2 + y-center^2 <= R^2: plot
 	add $t0, $t0, $imm1, $zero, 1, 0 				# x++
 	add $s1, $t0, $t1, $zero, 0, 0 					# $s1 = x_counter + y_counter
-	beq $zero, $s1, $imm1, $imm2, 511, END 			# if x_counter == 256 and y_counter == 255 jump to END
-	beq $zero, $t0, $imm1, $ra, 256, 0 				# else if x_counter == 256 return to the line y++ in outer_loop
+	beq $zero, $s1, $imm1, $imm2, 510, END 			# if x_counter == 255 and y_counter == 255 jump to END
+	beq $zero, $t0, $imm1, $ra, 255, 0 				# else if x_counter == 255 return to the line y++ in outer_loop
 	beq $zero, $zero, $zero, $imm1, inner_loop, 0 	# else return to inner_loop
 	
 plot:
