@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>C:\Users\tomer\source\repos\ComputerOrganization_ISA\test_asm\binom.asm  C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm_outputs\binom\imemin.txt  C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm_outputs\binom\dmemin.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>C:\Users\tomer\source\repos\ComputerOrganization_ISA\test_asm_syn_change\circle.asm  C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm_syn_change\circle\imemin.txt  C:\Users\tomer\source\repos\ComputerOrganization_ISA\asm_syn_change\circle\dmemin.txt</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

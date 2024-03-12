@@ -1,2 +1,6 @@
 ﻿  sim.c
-  sim.vcxproj -> C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\sim\x64\Debug\sim.exe
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\sim.c(311,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\sim.c(341,12): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\sim.c(354,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\sim.c(761): warning C4715: 'get_IORegister_name': not all control paths return a value
+  sim.vcxproj -> C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\x64\Debug\sim.exe
