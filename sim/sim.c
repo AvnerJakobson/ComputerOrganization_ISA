@@ -23,8 +23,6 @@
 //		Timer:
 //		* Check the implementation of the timer
 //
-//		General Todos:
-// 		* Test the disk implementation
 //
 /////////////////////////////////////////// [TODOS] /////////////////////////////////////////
 
@@ -686,14 +684,14 @@ int simulate_current_instruction(Instruction inst, int* memory,int* registers_ar
 					if (IORegisters[14] == 1){ // read
 						IORegisters[17] = 1; // disk is now busy
 						for (int i=0; i< DISK_SECTOR_SIZE; i++){
-							memory[registers_array[16] + i] = disk[registers_array[15]*DISK_SECTOR_SIZE + i]; // read the sector from the disk to the memory in the specified address
+							memory[IORegisters[16] + i] = disk[IORegisters[15]*DISK_SECTOR_SIZE + i]; // read the sector from the disk to the memory in the specified address
 						}
 						*disk_process_completion_cycle = *clk + 1024;
 					}
 					else if (IORegisters[14] == 2){ // write
 						IORegisters[17] = 1; // disk is now busy
 						for (int i=0; i< DISK_SECTOR_SIZE; i++){
-        					disk[registers_array[15]*DISK_SECTOR_SIZE + i] = memory[registers_array[16] + i]; // write the sector from the memory to the disk in the specified address
+        					disk[IORegisters[15]*DISK_SECTOR_SIZE + i] = memory[IORegisters[16] + i]; // write the sector from the memory to the disk in the specified address
 						}
  						*disk_process_completion_cycle = *clk + 1024;
 					}
