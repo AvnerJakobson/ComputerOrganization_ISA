@@ -1,7 +1,7 @@
 
 out $zero, $zero, $zero, $imm2, 0, 1 					# irq0enable (IO0) = 1
-out $zero, $zero, $imm1, $imm2, 11, 1 					# timer_enable = 1
 out $zero, $zero, $imm1, $imm2, 13, 16	 				# timer_max(IO13) = 16
+out $zero, $zero, $imm1, $imm2, 11, 1 					# timer_enable = 1
 out $zero, $imm1, $zero, $imm2, 6, timer_isr 			# irq_handler(IO6) = timer_isr
 
 inf_loop:
