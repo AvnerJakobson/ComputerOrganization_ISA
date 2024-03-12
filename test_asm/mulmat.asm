@@ -47,11 +47,10 @@ main:
 	add $s0, $zero, $imm2, $zero, 0, 0x120					# result matrix first element address
 		
 col_loop_a1:
-	jal $ra, $zero, $zero, $imm2, 0, mul_vec 				# mul_vec
+	jal $ra, $zero, $zero, $imm2, 0, mult_vec 				# mul_vec
 	sw $v0, $s0, $zero, $zero, 0, 0 						# save v0 to res_mat[$s0]
 	add $s0, $s0, $imm2, $zero, 0, 1 						# $s0++
 	add $a1, $a1, $imm2, $zero, 0, 1 						# $a1++
-	add $t0, $a0, $a1, $zero, 0, 0 							# $t0 = $a1 + $a0 
 	bgt $zero, $a1, $imm1, $imm2, 0x113, row_loop_a0 		# if a1 > 0x113: row_loop_a0
 	beq $zero, $zero, $zero, $imm2, 0, col_loop_a1 			# else col_loop_a1
 	
@@ -87,7 +86,7 @@ END:
 	lw $s2, $sp, $imm2, $zero, 0, 2							# restore $s2
 	lw $s1, $sp, $imm2, $zero, 0, 3							# restore $s1
 	lw $s0, $sp, $imm2, $zero, 0, 4							# restore $s0
-	add $sp, $sp, $imm2, $zero, 0, 3						# adjust stack pointer
+	add $sp, $sp, $imm2, $zero, 0, 5						# adjust stack pointer
 	halt $zero, $zero, $zero, $zero, 0, 0					# halt
 	
 	
