@@ -4,3 +4,4 @@
 .vscode
 .sim/sim_output/
 .sim/sim_output
+circle/trace.txt
