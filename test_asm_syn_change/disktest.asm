@@ -28,10 +28,10 @@ loop:
 wait_for_disk:
 	in $t1, $imm1, $zero, $zero, 17, 0 					# $t1 = diskstatus
 	beq $zero, $t1, $imm1, $ra, 0, 0 					# if diskstatus == 0, return to the loop thru $ra
-	beq $zero, $zero, $zero, $imm1, wait_for_disk, 0 	# jump to wait_for_disk
+	beq 	$zero, $zero,       $zero, $imm1, wait_for_disk, 0 	# jump to wait_for_disk
 
 ISR:
-	out $zero, $imm1, $zero, $imm2, 17, 0 				# set diskstatus to 0
+	out$zero, $imm1, $zero, $imm2, 17, 0 				# set diskstatus to 0
 	out $zero, $imm1, $zero, $imm2, 4, 0 				# set irq1status(IO4) to 0
 	reti $zero, $zero, $zero, $zero, 0, 0				# return from interrupt
 	
