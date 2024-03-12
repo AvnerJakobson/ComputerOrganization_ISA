@@ -1,2 +1,3 @@
 C:\Users\ajakobso\OneDrive - Intel Corporation\Desktop\Abner\other stuff\ComputerOrg\sim\x64\Debug\sim.exe
 C:\Users\tomer\source\repos\ComputerOrganization_ISA\sim\x64\Debug\sim.exe
+C:\Users\ajakobso\projects\ComputerOrganization_ISA\sim\x64\Debug\sim.exe

@@ -800,12 +800,12 @@ void increment_timer_and_trigger_irq0(int* IORegisters) {
 	if (IORegisters[11]== 1)
 	{
 		if (IORegisters[12] >= IORegisters[13]){
-			IORegisters[3] = 1;
 			IORegisters[12] = 0;
+			IORegisters[3] = 1;
 		}
 		else
 			IORegisters[12] ++;
-			IORegisters[3] = 1;
+			IORegisters[3] = 0;
 
 	}
 }
