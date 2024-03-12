@@ -401,6 +401,7 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 
 		if (*clk == 100000){
 			printf("AHHHH???? \n");
+			exit = 1;
 		}
 
 
