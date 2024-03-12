@@ -399,11 +399,6 @@ void simulation_loop(Instruction* instructions, int* memory, int* registers_arra
 
 	while (exit == 0){ //simulating
 
-		if (*clk == 100000){
-			printf("AHHHH???? \n");
-			exit = 1;
-		}
-
 
 		// ISR Handling
 
