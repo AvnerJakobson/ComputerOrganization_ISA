@@ -1,0 +1,5 @@
+0 WRITE irq0enable 00000001
+1 WRITE timermax 00000010
+2 WRITE timerenable 00000001
+3 WRITE irqhandler 00000006
+27 WRITE irq0status 00000000

@@ -805,8 +805,6 @@ void increment_timer_and_trigger_irq0(int* IORegisters) {
 		}
 		else
 			IORegisters[12] ++;
-			IORegisters[3] = 0;
-
 	}
 }
 
