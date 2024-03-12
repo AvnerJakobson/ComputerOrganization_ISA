@@ -1,20 +1,20 @@
 init_mat_1:
 	.word 0x100 1 											# set a(0, 0)
-	.word 0x101 0					 						# set a(0, 1)
-	.word 0x102 0 											# set a(0, 2)
-	.word 0x103 0					 						# set a(0, 3)
-	.word 0x104 0 											# set a(1, 0)
-	.word 0x105 1 					 						# set a(1, 1)
-	.word 0x106 0 											# set a(1, 2)
-	.word 0x107 0					 						# set a(1, 3)
-	.word 0x108 0 											# set a(2, 0)
-	.word 0x109 0					 						# set a(2, 1)
-	.word 0x10A 1 											# set a(2, 2)
-	.word 0x10B 0					 						# set a(2, 3)
-	.word 0x10C 0 											# set a(3, 0)
-	.word 0x10D 0					 						# set a(3, 1)
-	.word 0x10E 0 											# set a(3, 2)
-	.word 0x10F 1					 						# set a(3, 3)
+	.word 0x101 2					 						# set a(0, 1)
+	.word 0x102 3 											# set a(0, 2)
+	.word 0x103 4					 						# set a(0, 3)
+	.word 0x104 1 											# set a(1, 0)
+	.word 0x105 2 					 						# set a(1, 1)
+	.word 0x106 3 											# set a(1, 2)
+	.word 0x107 4					 						# set a(1, 3)
+	.word 0x108 1 											# set a(2, 0)
+	.word 0x109 2					 						# set a(2, 1)
+	.word 0x10A 3 											# set a(2, 2)
+	.word 0x10B 4					 						# set a(2, 3)
+	.word 0x10C 1 											# set a(3, 0)
+	.word 0x10D 2					 						# set a(3, 1)
+	.word 0x10E 3 											# set a(3, 2)
+	.word 0x10F 4					 						# set a(3, 3)
 	
 init_mat_2:
 	.word 0x110 1 											# set b(0, 0)
@@ -71,7 +71,7 @@ inner_loop:
 	lw $t1, $a0, $zero, $zero, 0, 0 						# load $t1 = mat0[$a0]
 	lw $t2, $a1, $zero, $zero, 0, 0 						# load $t2 = mat1[$a1]
 	mac $v0, $t1, $t2, $v0, 0, 0 							# mult and sum to $v0
-	add $t0, $t0, $imm2, $zero, 0, 0 						# $t0 (counter) ++
+	add $t0, $t0, $imm2, $zero, 0, 1 						# $t0 (counter) ++
 	add $a0, $a0, $imm2, $zero, 0, 1 						# $a0++
 	add $a1, $a1, $imm2, $zero, 0, 4 						# $a1 += 4
 	blt $zero, $t0, $imm1, $imm2, 4, inner_loop 			# if $t0 (counter) < 4: inner_loop
